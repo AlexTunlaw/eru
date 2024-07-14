@@ -101,6 +101,8 @@ class EruSelfAttentionModel(torch.nn.Module):
                 attention_scores_normalized = (ctx.attention_scores - attention_scores_min) / (attention_scores_max - attention_scores_min)
                 ctx.attention_weights = \
                     self.sigmoid(attention_scores_normalized * 2 * sigmoid_domain - sigmoid_domain)
+                # attention_weights_sum = torch.sum(ctx.attention_scores, dim=-1).unsqueeze(-1)
+                # ctx.attention_weights = ctx.attention_weights / attention_weights_sum
 
             case "softmax":
                 ctx.attention_weights = torch.softmax(ctx.attention_scores, dim=-1) # canonical implementation
