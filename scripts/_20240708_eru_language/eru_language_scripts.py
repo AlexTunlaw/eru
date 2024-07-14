@@ -66,6 +66,7 @@ def run_scripts():
                 "max-seq-len": 12,
                 "log-every-n": 10,
                 "model": {
+                    # "attention-weights-mode": "sigmoid",
                     "attention-weights-mode": "overtaking-sigmoid",
                     # "attention-weights-mode": "softmax",
                     "embedding-dim": 64,

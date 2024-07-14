@@ -26,7 +26,7 @@ class EruSelfAttentionModel(torch.nn.Module):
 
         super().__init__()
 
-        assert attention_weights_mode in ["softmax", "overtaking-sigmoid"]
+        assert attention_weights_mode in ["softmax", "sigmoid", "overtaking-sigmoid"]
         self.attention_weights_mode = attention_weights_mode
 
         self.embedding = torch.nn.Embedding(
@@ -85,15 +85,22 @@ class EruSelfAttentionModel(torch.nn.Module):
         # batch, num-heads, seq, seq
         match self.attention_weights_mode:
             case "overtaking-sigmoid": # novel
-                sigmoid_domain = 10
+                sigmoid_domain = 5
                 attention_scores_max = torch.max(ctx.attention_scores, dim=-1).values.unsqueeze(-1)
                 attention_scores_min = torch.min(ctx.attention_scores, dim=-1).values.unsqueeze(-1)
                 attention_scores_normalized = (ctx.attention_scores - attention_scores_min) / (attention_scores_max - attention_scores_min)
                 sigmoid_selector = torch.max(attention_scores_normalized, dim=-1).values.unsqueeze(-1)
-                ctx.attention_weights = (
-                    (1 - sigmoid_selector) * torch.softmax(attention_scores_normalized, dim=-1) +
+                ctx.attention_weights = \
+                    (1 - sigmoid_selector) * torch.softmax(attention_scores_normalized, dim=-1) + \
                     sigmoid_selector * self.sigmoid(attention_scores_normalized * 2 * sigmoid_domain - sigmoid_domain)
-                )
+
+            case "sigmoid": # novel
+                sigmoid_domain = 5
+                attention_scores_max = torch.max(ctx.attention_scores, dim=-1).values.unsqueeze(-1)
+                attention_scores_min = torch.min(ctx.attention_scores, dim=-1).values.unsqueeze(-1)
+                attention_scores_normalized = (ctx.attention_scores - attention_scores_min) / (attention_scores_max - attention_scores_min)
+                ctx.attention_weights = \
+                    self.sigmoid(attention_scores_normalized * 2 * sigmoid_domain - sigmoid_domain)
 
             case "softmax":
                 ctx.attention_weights = torch.softmax(ctx.attention_scores, dim=-1) # canonical implementation
