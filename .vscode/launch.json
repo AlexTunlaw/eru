@@ -1,0 +1,17 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Eru Scripts",
+            "type": "debugpy",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}",
+                "PROJECTS_HOME": "${workspaceFolder}"
+            },
+            "program": "${workspaceFolder}/run_scripts.py",
+            "justMyCode": true,
+        },
+   ]
+}
