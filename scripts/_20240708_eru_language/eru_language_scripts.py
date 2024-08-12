@@ -58,6 +58,10 @@ def run_scripts():
         },
         { "enabled": True,
             "step-method": EruLanguageBuilder.train_self_attention,
+            "outputs": {
+                "loss-logs": "loss-logs: csv",
+            },
+            "run-count": 5,
             "language": language_params,
             "training-config": {
                 "early-stop": "FeroWindowBasedLossLevel() <= 0.05", # note
@@ -66,9 +70,9 @@ def run_scripts():
                 "max-seq-len": 12,
                 "log-every-n": 10,
                 "model": {
+                    # "attention-weights-mode": "softmax",
                     # "attention-weights-mode": "sigmoid",
                     "attention-weights-mode": "overtaking-sigmoid",
-                    # "attention-weights-mode": "softmax",
                     "embedding-dim": 64,
                     "attention-dim": 50,
                     "c-heads": 3

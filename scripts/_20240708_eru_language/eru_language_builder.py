@@ -79,7 +79,6 @@ class EruLanguageBuilder(OaiBuilder):
             target = 22
             for k in range(ctx.batch_size):
                 for h in range(ctx.c_heads):
-                    head_base = 100.0 * (1 + h)
                     attention_weights = ctx.attention_weights[k, h, -1].tolist()
                     for i, w in enumerate(attention_weights):
                         if w > record_threshold:
@@ -87,14 +86,51 @@ class EruLanguageBuilder(OaiBuilder):
                             vocab_token_attention_developments_log[ctx.i_batch][vocab_token] = w
                     continue
 
-        EruSelfAttentionWorkflow.train(
-            example_stream=example_stream,
-            config={
-                **params["training-config"],
-                "observe-forward-fn": observe_forward
-            }
+        c_runs = int(params["run-count"])
+        loss_logs = []
+        for i_run in range(c_runs):
+
+            print(f"*** run {i_run}")
+
+            results = EruSelfAttentionWorkflow.train(
+                example_stream=example_stream,
+                config={
+                    **params["training-config"],
+                    "observe-forward-fn": observe_forward
+                }
+            )
+
+            loss_logs.append(results["loss-log"])
+
+            continue
+
+        # steps to convergence average
+        last_k = 5
+        loss_logs_accepted = [
+            log
+            for log in loss_logs
+            if sum(log[-last_k : ]) / last_k < 1.0
+        ]
+        steps_to_convergence_average = \
+            sum(len(log) for log in loss_logs_accepted) / len(loss_logs_accepted)
+        print(f"steps to convergence, average: {steps_to_convergence_average}")
+
+        # loss logs
+        output_schema=CsvSchema(columns=[f"run-{k}" for k in range(c_runs)])
+        longest_run_batches = max(len(log) for log in loss_logs)
+        output_lines = [
+            CsvLine(schema=output_schema, values={})
+            for _k in range(longest_run_batches)
+        ]
+        for i_run, log in enumerate(loss_logs):
+            for k, v in enumerate(log):
+                output_lines[k][f"run-{i_run}"] = f"{v:.4f}"
+        CsvFile.save_to_csv(
+            self.get_path(params["outputs"]["loss-logs"]),
+            output_lines, output_schema
         )
 
+        # vocab attention developments log
         output_schema=CsvSchema(columns=["token"] + [str(k) for k in range(batch_count)])
         output_lines = [
             CsvLine(schema=output_schema, values={
