@@ -74,7 +74,6 @@ class EruBaseWorkflow:
             y = torch.stack(labels)
             return x, y
 
-        normalize_attention_weights = False
         #
         # training loop 
         #
@@ -90,15 +89,12 @@ class EruBaseWorkflow:
                 x,
                 observe_fn=observe_forward_fn,
                 i_batch=i_batch,
-                normalize_attention_weights=normalize_attention_weights
             )
 
             loss = loss_fn(y_predicted, y_labels)
 
             loss.backward()
             optimizer.step()
-
-            normalize_attention_weights = loss.item() > 0.9
 
             # misc
 

@@ -51,7 +51,7 @@ class EruSelfAttentionModel(torch.nn.Module):
 
     # -----------------------------------------------------------------------
 
-    def forward(self, x, observe_fn=None, i_batch=None, normalize_attention_weights=False):
+    def forward(self, x, observe_fn=None, i_batch=None):
 
         batch_size, seq_len = x.shape
 
