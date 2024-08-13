@@ -72,7 +72,8 @@ def run_scripts():
                 "model": {
                     # "attention-weights-mode": "softmax",
                     # "attention-weights-mode": "sigmoid",
-                    "attention-weights-mode": "overtaking-sigmoid",
+                    # "attention-weights-mode": "overtaking-sigmoid",
+                    "attention-weights-mode": "overtaking-sigmoid-tuned",
                     "embedding-dim": 64,
                     "attention-dim": 50,
                     "c-heads": 3

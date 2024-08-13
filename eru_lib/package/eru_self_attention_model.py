@@ -26,7 +26,7 @@ class EruSelfAttentionModel(torch.nn.Module):
 
         super().__init__()
 
-        assert attention_weights_mode in ["softmax", "sigmoid", "overtaking-sigmoid"]
+        assert attention_weights_mode in ["softmax", "sigmoid", "overtaking-sigmoid", "overtaking-sigmoid-tuned"]
         self.attention_weights_mode = attention_weights_mode
 
         self.embedding = torch.nn.Embedding(
@@ -89,9 +89,24 @@ class EruSelfAttentionModel(torch.nn.Module):
                 attention_scores_max = torch.max(ctx.attention_scores, dim=-1).values.unsqueeze(-1)
                 attention_scores_min = torch.min(ctx.attention_scores, dim=-1).values.unsqueeze(-1)
                 attention_scores_normalized = (ctx.attention_scores - attention_scores_min) / (attention_scores_max - attention_scores_min)
-                sigmoid_selector = torch.max(attention_scores_normalized, dim=-1).values.unsqueeze(-1)
+                softmax_selector = 1.0 - torch.max(attention_scores_normalized, dim=-1).values.unsqueeze(-1)
+                sigmoid_selector = 1.0 - softmax_selector
                 ctx.attention_weights = \
-                    (1 - sigmoid_selector) * torch.softmax(attention_scores_normalized, dim=-1) + \
+                    softmax_selector * torch.softmax(attention_scores_normalized, dim=-1) + \
+                    sigmoid_selector * self.sigmoid(attention_scores_normalized * 2 * sigmoid_domain - sigmoid_domain)
+
+            case "overtaking-sigmoid-tuned": # novel
+                sigmoid_domain = 5
+                attention_scores_max = torch.max(ctx.attention_scores, dim=-1).values.unsqueeze(-1)
+                attention_scores_min = torch.min(ctx.attention_scores, dim=-1).values.unsqueeze(-1)
+                attention_scores_normalized = (ctx.attention_scores - attention_scores_min) / (attention_scores_max - attention_scores_min)
+                softmax_selector = torch.sigmoid(
+                    (1.0 - torch.max(attention_scores_normalized, dim=-1).values.unsqueeze(-1)) * \
+                        2.0 * sigmoid_domain + sigmoid_domain
+                )
+                sigmoid_selector = 1.0 - softmax_selector
+                ctx.attention_weights = \
+                    softmax_selector * torch.softmax(attention_scores_normalized, dim=-1) + \
                     sigmoid_selector * self.sigmoid(attention_scores_normalized * 2 * sigmoid_domain - sigmoid_domain)
 
             case "sigmoid": # novel
