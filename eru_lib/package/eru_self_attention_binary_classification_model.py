@@ -5,7 +5,7 @@ from ml3 import SimpleObject
 
 # ---------------------------------------------------------------------------
 
-class EruSelfAttentionModel(torch.nn.Module):
+class EruSelfAttentionBinaryClassificationModel(torch.nn.Module):
     
     # -----------------------------------------------------------------------
     # based on:

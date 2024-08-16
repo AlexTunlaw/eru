@@ -1,8 +1,11 @@
 from .package.eru_sigmoidal_expression_distribution import EruSigmoidalExpressionDistribution
 from .package.eru_language import EruLanguage
+
 from .package.eru_example_stream import EruExampleStream
 from .package.eru_similarity_example_stream import EruSimilarityExampleStream
 
-from .package.eru_gru_model import EruGruModel
-from .package.eru_gru_workflow import EruGruWorkflow
-from .package.eru_self_attention_workflow import EruSelfAttentionWorkflow
+from .package.eru_gru_binary_classification_model import EruGruBinaryClassificationModel
+from .package.eru_gru_binary_classification_workflow import EruGruBinaryClassificationWorkflow
+
+from .package.eru_self_attention_binary_classification_model import EruSelfAttentionBinaryClassificationModel
+from .package.eru_self_attention_binary_classification_workflow import EruSelfAttentionBinaryClassificationWorkflow

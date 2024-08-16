@@ -2,7 +2,7 @@ import torch
 
 # ---------------------------------------------------------------------------
 
-class EruGruModel(torch.nn.Module):
+class EruGruBinaryClassificationModel(torch.nn.Module):
     
     # -----------------------------------------------------------------------
 

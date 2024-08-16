@@ -42,6 +42,20 @@ class EruBaseWorkflow:
     # -----------------------------------------------------------------------
 
     @classmethod
+    def make_loss_fn(cls):
+
+        assert "Needs to be overridden"
+
+    # -----------------------------------------------------------------------
+
+    @classmethod
+    def make_batch(cls, example_stream, batch_size, max_seq_len):
+
+        assert "Needs to be overridden"
+
+    # -----------------------------------------------------------------------
+
+    @classmethod
     def train(cls, example_stream, config):
 
         batch_size = config["batch-size"]
@@ -57,22 +71,9 @@ class EruBaseWorkflow:
             weight_decay=config["optimizer"].get("adam", {}).get("wd", 0.0)
         )
 
-        loss_fn = torch.nn.BCELoss()
+        loss_fn = cls.make_loss_fn()
 
         loss_level_detector, loss_threshold = cls.get_early_stop(config)
-
-        def make_batch():
-
-            utterances, labels = [], []
-            for _k in range(batch_size):
-                utterance, label = example_stream.get_example()
-                utterance_normalized = cls.get_normalized_seq(utterance, max_seq_len=max_seq_len)
-                utterances.append(torch.tensor(utterance_normalized))
-                labels.append(torch.tensor(label, dtype=torch.float))
-
-            x = torch.stack(utterances)
-            y = torch.stack(labels)
-            return x, y
 
         loss_log = []
         #
@@ -84,7 +85,7 @@ class EruBaseWorkflow:
 
             # main part
 
-            x, y_labels = make_batch()
+            x, y_labels = cls.make_batch(example_stream, batch_size, max_seq_len)
 
             y_predicted = model.forward(
                 x,

@@ -4,7 +4,12 @@ from ml3 import CsvFile, CsvSchema, CsvLine, ProgressTrace, AllRandoms
 
 from fero_lib import OaiBuilder
 
-from eru_lib import EruExampleStream, EruSimilarityExampleStream, EruGruWorkflow, EruSelfAttentionWorkflow
+from eru_lib import (
+    EruExampleStream,
+    EruSimilarityExampleStream,
+    EruGruBinaryClassificationWorkflow,
+    EruSelfAttentionBinaryClassificationWorkflow,
+)
 
 # ---------------------------------------------------------------------------
 
@@ -48,7 +53,7 @@ class EruLanguageBuilder(OaiBuilder):
             "mode": "binary-classification-of-root-expression"
         })
 
-        EruGruWorkflow.train(
+        EruGruBinaryClassificationWorkflow.train(
             example_stream=example_stream,
             config=params["training-config"]
         )
@@ -92,7 +97,7 @@ class EruLanguageBuilder(OaiBuilder):
 
             print(f"*** run {i_run}")
 
-            results = EruSelfAttentionWorkflow.train(
+            results = EruSelfAttentionBinaryClassificationWorkflow.train(
                 example_stream=example_stream,
                 config={
                     **params["training-config"],
