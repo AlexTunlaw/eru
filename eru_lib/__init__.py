@@ -1,6 +1,7 @@
 from .package.eru_sigmoidal_expression_distribution import EruSigmoidalExpressionDistribution
 from .package.eru_language import EruLanguage
 from .package.eru_example_stream import EruExampleStream
+from .package.eru_similarity_example_stream import EruSimilarityExampleStream
 
 from .package.eru_gru_model import EruGruModel
 from .package.eru_gru_workflow import EruGruWorkflow

@@ -6,6 +6,7 @@ sigmoid = lambda x: 1 / (1 + np.exp(-x))
 
 from .eru_sigmoidal_expression_distribution import EruSigmoidalExpressionDistribution
 from .eru_expression import EruExpression
+from .eru_expression_node import EruExpressionNode
 
 # ---------------------------------------------------------------------------
 
@@ -190,9 +191,9 @@ class EruLanguage:
         c_iterations = 0
         while True:
             expression = np.random.choice(self.expressions)
-            utterance, signature = expression.make_utterance()
+            utterance, signature, tree = expression.make_utterance()
             if utterance_min_len <= len(utterance) <= utterance_max_len:
                 break
             c_iterations += 1
             assert c_iterations < max_iterations, f"Failed to make utterance in {max_iterations} iterations"
-        return utterance, signature
+        return utterance, signature, tree

@@ -4,7 +4,7 @@ from ml3 import CsvFile, CsvSchema, CsvLine, ProgressTrace, AllRandoms
 
 from fero_lib import OaiBuilder
 
-from eru_lib import EruExampleStream, EruGruWorkflow, EruSelfAttentionWorkflow
+from eru_lib import EruExampleStream, EruSimilarityExampleStream, EruGruWorkflow, EruSelfAttentionWorkflow
 
 # ---------------------------------------------------------------------------
 
@@ -39,7 +39,7 @@ class EruLanguageBuilder(OaiBuilder):
     
     # -----------------------------------------------------------------------
 
-    def train_gru(self, params):
+    def train_gru_binary_classification(self, params):
 
         AllRandoms.set_random_seed(13)
 
@@ -57,7 +57,7 @@ class EruLanguageBuilder(OaiBuilder):
 
     # -----------------------------------------------------------------------
 
-    def train_self_attention(self, params):
+    def train_self_attention_binary_classification(self, params):
 
         AllRandoms.set_random_seed(13)
 
@@ -148,5 +148,28 @@ class EruLanguageBuilder(OaiBuilder):
                 if w is not None:
                     output_lines[token][str(i_batch)] = f"{w:.5f}"
         CsvFile.save_to_csv(self.get_path("test-1: csv"), output_lines, output_schema)
+
+        return
+
+    # -----------------------------------------------------------------------
+
+    def train_self_attention_similarity(self, params):
+
+        AllRandoms.set_random_seed(13)
+
+        example_stream = EruSimilarityExampleStream.make_from_config({
+            **params["language"],
+            "mode": "binary-classification-of-root-expression",
+            "example-stream": params["example-stream"]
+        })
+
+        AllRandoms.set_random_seed(int(1000 * time.time()) % 2**31)
+
+        for _k in range(5):
+            utterance_1, utterance_2, similarity = example_stream.get_example()
+            print(utterance_1)
+            print(utterance_2)
+            print(similarity)
+            print()
 
         return

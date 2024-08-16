@@ -1,5 +1,9 @@
 import numpy as np
 
+from ml3 import SimpleObject
+
+from .eru_expression_node import EruExpressionNode
+
 # ---------------------------------------------------------------------------
 
 class EruExpression:
@@ -107,12 +111,78 @@ class EruExpression:
 
         utterance = [np.random.choice(self.vocab_tokens, p=self.vocab_tokens_distribution_normalized)]
         signature = [self.id]
+        modifier_trees = []
         for modifier_expression, modifier_expression_p in \
             zip(self.modifier_expressions, self.modifier_expressions_distribution_normalized):
             if np.random.rand() < modifier_expression_p:
-                modifier_utterance, modifier_signature = modifier_expression.make_utterance()
+                modifier_utterance, modifier_signature, modifier_tree = modifier_expression.make_utterance()
                 utterance.extend(modifier_utterance)
                 signature.extend(modifier_signature)
+                modifier_trees.append(modifier_tree)
 
         np.random.shuffle(utterance)
-        return utterance, signature
+        tree = EruExpressionNode(expression=self, signature=signature, children=modifier_trees)
+        return utterance, signature, tree
+
+    # -----------------------------------------------------------------------
+
+    def make_similar_utterance(self, tree_1, requested_similarity, expression_vocab_loss, modifiers_weight):
+
+        assert tree_1.expression == self
+
+        self_expression_token = tree_1.signature[0]
+        self_expression_similarity = 1.0
+        if len(self.vocab_tokens) > 1 and requested_similarity < np.random.rand():
+            self_expression_similarity -= expression_vocab_loss
+            while True:
+                new_self_expression_token = [np.random.choice(self.vocab_tokens, p=self.vocab_tokens_distribution_normalized)]
+                if self_expression_token != new_self_expression_token:
+                    break
+                continue
+
+        utterance = [self_expression_token]
+        signature = [self.id]
+        modifier_trees = []
+
+        modifiers_similarity_sum = 0.0
+
+        for modifier_expression in self.modifier_expressions:
+            matching_child = None
+            for child in tree_1.children:
+                if modifier_expression == child.expression:
+                    matching_child = child
+                    break
+            if matching_child:
+                if np.random.rand() < requested_similarity:
+                    modifier_utterance, modifier_signature, modifier_tree, modifier_actual_similarity = \
+                        matching_child.expression.make_similar_utterance(
+                            tree_1=matching_child,
+                            requested_similarity=requested_similarity,
+                            expression_vocab_loss=expression_vocab_loss,
+                            modifiers_weight=modifiers_weight
+                        )
+                    utterance.extend(modifier_utterance)
+                    signature.extend(modifier_signature)
+                    modifier_trees.append(modifier_tree)
+                    modifiers_similarity_sum += modifier_actual_similarity
+            else:
+                if requested_similarity < np.random.rand():
+                    modifier_utterance, modifier_signature, modifier_tree = \
+                        modifier_expression.make_utterance()
+                    utterance.extend(modifier_utterance)
+                    signature.extend(modifier_signature)
+                    modifier_trees.append(modifier_tree)
+                    modifiers_similarity_sum += 0.0 # this modifier is completely new, so zero similarity
+
+        np.random.shuffle(utterance)
+        tree = EruExpressionNode(expression=self, signature=signature, children=modifier_trees)
+        actual_similarity = (
+            (1.0 - modifiers_weight) * self_expression_similarity +
+            (
+                modifiers_weight * modifiers_similarity_sum / len(self.modifier_expressions)
+                if modifier_trees
+                else 0.0
+            )
+        )
+        assert 0.0 <= actual_similarity <= 1.0
+        return utterance, signature, tree, actual_similarity

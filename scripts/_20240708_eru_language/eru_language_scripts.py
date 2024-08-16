@@ -36,7 +36,7 @@ def run_scripts():
             "training-data-count": 300,
         },
         { "enabled": False,
-            "step-method": EruLanguageBuilder.train_gru,
+            "step-method": EruLanguageBuilder.train_gru_binary_classification,
             "language": language_params,
             "training-config": {
                 "early-stop": "FeroWindowBasedLossLevel() <= 0.05", # note
@@ -57,12 +57,46 @@ def run_scripts():
             }
         },
         { "enabled": True,
-            "step-method": EruLanguageBuilder.train_self_attention,
+            "step-method": EruLanguageBuilder.train_self_attention_binary_classification,
             "outputs": {
                 "loss-logs": "loss-logs: csv",
             },
             "run-count": 5,
             "language": language_params,
+            "training-config": {
+                "early-stop": "FeroWindowBasedLossLevel() <= 0.05", # note
+                "batch-size": 100,
+                "batch-count": 250,
+                "max-seq-len": 12,
+                "log-every-n": 10,
+                "model": {
+                    # "attention-weights-mode": "softmax",
+                    # "attention-weights-mode": "sigmoid",
+                    # "attention-weights-mode": "overtaking-sigmoid",
+                    "attention-weights-mode": "overtaking-sigmoid-tuned",
+                    "embedding-dim": 64,
+                    "attention-dim": 50,
+                    "c-heads": 3
+                },
+                "optimizer": {
+                    "adam": {
+                        "lr": 0.01,
+                        "wd": 0.05
+                    }
+                }
+            }
+        },
+        { "enabled": False,
+            "step-method": EruLanguageBuilder.train_self_attention_similarity,
+            "outputs": {},
+            "run-count": 5,
+            "language": language_params,
+            "example-stream": {
+                "p-basically-similar": 0.5,
+                "similarity-if-basically-similar": 0.66,
+                "expression-vocab-loss": 0.1,
+                "modifiers-weight": 0.4
+            },
             "training-config": {
                 "early-stop": "FeroWindowBasedLossLevel() <= 0.05", # note
                 "batch-size": 100,

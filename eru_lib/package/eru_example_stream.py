@@ -41,7 +41,7 @@ class EruExampleStream:
 
     def get_example(self):
 
-        utterance, signature = self.language.make_utterance(
+        utterance, signature, _tree = self.language.make_utterance(
             utterance_min_len=self.utterance_min_len,
             utterance_max_len=self.utterance_max_len
         )
