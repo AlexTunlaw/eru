@@ -3,9 +3,12 @@ import torch
 
 from ml3 import SimpleObject
 
-# ---------------------------------------------------------------------------
+from .eru_self_attention_model import EruSelfAttentionModel
 
-class EruSelfAttentionBinaryClassificationModel(torch.nn.Module):
+# ---------------------------------------------------------------------------
+# multi-head self-attention
+
+class EruSelfAttentionBinaryClassificationModel(EruSelfAttentionModel): 
     
     # -----------------------------------------------------------------------
     # based on:
@@ -24,28 +27,17 @@ class EruSelfAttentionBinaryClassificationModel(torch.nn.Module):
         dropout=None
     ):
 
-        super().__init__()
-
-        assert attention_weights_mode in ["softmax", "sigmoid", "overtaking-sigmoid", "overtaking-sigmoid-tuned"]
-        self.attention_weights_mode = attention_weights_mode
-
-        self.embedding = torch.nn.Embedding(
-            vocab_size,
-            embedding_dim
+        super().__init__(
+            vocab_size=vocab_size,
+            embedding_dim=embedding_dim,
+            attention_dim=attention_dim,
+            c_heads=c_heads,
+            attention_weights_mode=attention_weights_mode,
+            dropout=dropout
         )
 
-        self.layer_norm = torch.nn.LayerNorm((embedding_dim,))
-
-        attention_v_dim = embedding_dim
-        self.W_key = torch.nn.Parameter(torch.rand(c_heads, attention_dim, embedding_dim))
-        self.W_query = torch.nn.Parameter(torch.rand(c_heads, attention_dim, embedding_dim))
-        self.W_value = torch.nn.Parameter(torch.rand(c_heads, attention_v_dim, embedding_dim))
-
-        self.c_heads = c_heads
-        self.scale = math.sqrt(embedding_dim)
-
         output_dim = 1
-        self.fc = torch.nn.Linear(c_heads * attention_v_dim, output_dim)
+        self.fc = torch.nn.Linear(c_heads * embedding_dim, output_dim)
         self.sigmoid = torch.nn.Sigmoid()
         return
 
@@ -55,87 +47,21 @@ class EruSelfAttentionBinaryClassificationModel(torch.nn.Module):
 
         batch_size, seq_len = x.shape
 
-        ctx = SimpleObject(
-            i_batch=i_batch,
+        # -> batch_size, c_heads, seq_len, embedding_dim
+        r_all_heads = super().forward(
             x=x,
-            batch_size=batch_size, seq_len=seq_len, c_heads=self.c_heads,
-            embedded=None, embedded_repeated=None,
-            queries=None, keys=None, values=None,
-            attention_scores=None, attention_weights=None,
-            output_valued=None, output_final=None
+            observe_fn=observe_fn,
+            i_batch=i_batch
         )
 
-        # batch, seq, embedding-d
-        ctx.embedded = self.layer_norm(self.embedding(x))
-        # batch, seq, embedding-d -> embedding-d, seq, batch ->
-        #   num-heads, embedding-d, seq, batch ->
-        #     batch, num-heads, embedding-d, seq 
-        ctx.embedded_repeated = ctx.embedded.permute(2, 1, 0).repeat(self.c_heads, 1, 1, 1).permute(3, 0, 1, 2)
+        # We use BOS (token 0) for seq meaning
+        # -> batch_size, c_heads, embedding_dim
+        r_all_heads_bos = r_all_heads[:, :, 0, :]
 
-        # W: num-heads, attention-d, embedding-d
-        # query, keys, values:
-        # batch, num-heads, seq, attention-d
-        ctx.queries = torch.matmul(self.W_query, ctx.embedded_repeated).permute(0, 1, 3, 2)
-        ctx.keys = torch.matmul(self.W_key, ctx.embedded_repeated).permute(0, 1, 3, 2)
-        ctx.values = torch.matmul(self.W_value, ctx.embedded_repeated).permute(0, 1, 3, 2)
-
-        # batch, num-heads, seq, seq
-        ctx.attention_scores = torch.matmul(ctx.queries, ctx.keys.permute(0, 1, 3, 2)) / self.scale
-
-        # batch, num-heads, seq, seq
-        match self.attention_weights_mode:
-            case "overtaking-sigmoid": # novel
-                sigmoid_domain = 5
-                attention_scores_max = torch.max(ctx.attention_scores, dim=-1).values.unsqueeze(-1)
-                attention_scores_min = torch.min(ctx.attention_scores, dim=-1).values.unsqueeze(-1)
-                attention_scores_normalized = (ctx.attention_scores - attention_scores_min) / (attention_scores_max - attention_scores_min)
-                softmax_selector = 1.0 - torch.max(attention_scores_normalized, dim=-1).values.unsqueeze(-1)
-                sigmoid_selector = 1.0 - softmax_selector
-                ctx.attention_weights = \
-                    softmax_selector * torch.softmax(attention_scores_normalized, dim=-1) + \
-                    sigmoid_selector * self.sigmoid(attention_scores_normalized * 2 * sigmoid_domain - sigmoid_domain)
-
-            case "overtaking-sigmoid-tuned": # novel
-                sigmoid_domain = 5
-                attention_scores_max = torch.max(ctx.attention_scores, dim=-1).values.unsqueeze(-1)
-                attention_scores_min = torch.min(ctx.attention_scores, dim=-1).values.unsqueeze(-1)
-                attention_scores_normalized = (ctx.attention_scores - attention_scores_min) / (attention_scores_max - attention_scores_min)
-                softmax_selector = torch.sigmoid(
-                    (1.0 - torch.max(attention_scores_normalized, dim=-1).values.unsqueeze(-1)) * \
-                        2.0 * sigmoid_domain + sigmoid_domain
-                )
-                sigmoid_selector = 1.0 - softmax_selector
-                ctx.attention_weights = \
-                    softmax_selector * torch.softmax(attention_scores_normalized, dim=-1) + \
-                    sigmoid_selector * self.sigmoid(attention_scores_normalized * 2 * sigmoid_domain - sigmoid_domain)
-
-            case "sigmoid": # novel
-                sigmoid_domain = 5
-                attention_scores_max = torch.max(ctx.attention_scores, dim=-1).values.unsqueeze(-1)
-                attention_scores_min = torch.min(ctx.attention_scores, dim=-1).values.unsqueeze(-1)
-                attention_scores_normalized = (ctx.attention_scores - attention_scores_min) / (attention_scores_max - attention_scores_min)
-                ctx.attention_weights = \
-                    self.sigmoid(attention_scores_normalized * 2 * sigmoid_domain - sigmoid_domain)
-                # attention_weights_sum = torch.sum(ctx.attention_scores, dim=-1).unsqueeze(-1)
-                # ctx.attention_weights = ctx.attention_weights / attention_weights_sum
-
-            case "softmax":
-                ctx.attention_weights = torch.softmax(ctx.attention_scores, dim=-1) # canonical implementation
-
-        # batch, num-heads, seq, attention-v-d
-        ctx.output_valued = torch.matmul(ctx.attention_weights, ctx.values)
-
-        # batch, seq, 1
-        ctx.output_final = self.sigmoid(
-            self.fc(
-                ctx.output_valued
-                    .permute(0, 2, 1, 3).reshape(batch_size * seq_len, -1)
-            ).reshape(batch_size, seq_len)
+        # -> batch_size
+        output = self.sigmoid(
+            self.fc(r_all_heads_bos.reshape(batch_size, -1)
+            ).reshape(batch_size)
         )
-        assert ctx.output_final.shape == (batch_size, seq_len)
-        
-        if observe_fn is not None:
-            observe_fn(ctx)
-
-        # last or first ones (BOS or EOS) are good for utterance meaning
-        return ctx.output_final[:, -1] 
+        assert output.shape == (batch_size, )
+        return output

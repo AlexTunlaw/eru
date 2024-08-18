@@ -9,6 +9,7 @@ from eru_lib import (
     EruSimilarityExampleStream,
     EruGruBinaryClassificationWorkflow,
     EruSelfAttentionBinaryClassificationWorkflow,
+    EruSelfAttentionSimilarityWorkflow,
 )
 
 # ---------------------------------------------------------------------------
@@ -170,11 +171,30 @@ class EruLanguageBuilder(OaiBuilder):
 
         AllRandoms.set_random_seed(int(1000 * time.time()) % 2**31)
 
-        for _k in range(5):
-            utterance_1, utterance_2, similarity = example_stream.get_example()
-            print(utterance_1)
-            print(utterance_2)
-            print(similarity)
-            print()
+        c_runs = int(params["run-count"])
+        loss_logs = []
+        for i_run in range(c_runs):
 
+            print(f"*** run {i_run}")
+
+            results = EruSelfAttentionSimilarityWorkflow.train(
+                example_stream=example_stream,
+                config=params["training-config"]
+            )
+
+            loss_logs.append(results["loss-log"])
+
+            continue
+
+        # steps to convergence average
+        last_k = 5
+        loss_logs_accepted = [
+            log
+            for log in loss_logs
+            if sum(log[-last_k : ]) / last_k < 1.0
+        ]
+        steps_to_convergence_average = \
+            sum(len(log) for log in loss_logs_accepted) / len(loss_logs_accepted)
+        print(f"steps to convergence, average: {steps_to_convergence_average}")
+        
         return

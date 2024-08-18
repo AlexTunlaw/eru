@@ -9,6 +9,13 @@ class EruBaseBinaryClassificationWorkflow(EruBaseWorkflow):
     # -----------------------------------------------------------------------
 
     @classmethod
+    def make_model(cls, example_stream, config):
+
+        assert False, "Needs to be overridden"
+
+    # -----------------------------------------------------------------------
+
+    @classmethod
     def make_loss_fn(self):
 
         return torch.nn.BCELoss()
@@ -17,8 +24,6 @@ class EruBaseBinaryClassificationWorkflow(EruBaseWorkflow):
 
     @classmethod
     def make_batch(cls, example_stream, batch_size, max_seq_len):
-
-        assert "Needs to be overridden"
 
         utterances, labels = [], []
         for _k in range(batch_size):

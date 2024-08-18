@@ -37,21 +37,21 @@ class EruBaseWorkflow:
     @classmethod
     def make_model(cls, example_stream, config):
 
-        assert "Needs to be overridden"
+        assert False, "Needs to be overridden"
 
     # -----------------------------------------------------------------------
 
     @classmethod
     def make_loss_fn(cls):
 
-        assert "Needs to be overridden"
+        assert False, "Needs to be overridden"
 
     # -----------------------------------------------------------------------
 
     @classmethod
     def make_batch(cls, example_stream, batch_size, max_seq_len):
 
-        assert "Needs to be overridden"
+        assert False, "Needs to be overridden"
 
     # -----------------------------------------------------------------------
 
@@ -85,10 +85,12 @@ class EruBaseWorkflow:
 
             # main part
 
-            x, y_labels = cls.make_batch(example_stream, batch_size, max_seq_len)
+            batch = cls.make_batch(example_stream, batch_size, max_seq_len)
+            x = batch[:-1]
+            y_labels = batch[-1]
 
             y_predicted = model.forward(
-                x,
+                *x,
                 observe_fn=observe_forward_fn,
                 i_batch=i_batch,
             )

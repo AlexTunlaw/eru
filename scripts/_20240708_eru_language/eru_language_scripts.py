@@ -20,7 +20,7 @@ def run_scripts():
 
     builder.run_steps([
         #
-        # training data example
+        # language stats
         #
         { "enabled": False,
             "step-method": EruLanguageBuilder.generate_language_data,
@@ -35,6 +35,9 @@ def run_scripts():
             **language_params,
             "training-data-count": 300,
         },
+        #
+        # binary classification experiments - GRU; baseline to show that the language is learnable
+        #
         { "enabled": False,
             "step-method": EruLanguageBuilder.train_gru_binary_classification,
             "language": language_params,
@@ -56,6 +59,9 @@ def run_scripts():
                 }
             }
         },
+        #
+        # binary classification experiments - Multi-head Self-Attention
+        #
         { "enabled": True,
             "step-method": EruLanguageBuilder.train_self_attention_binary_classification,
             "outputs": {
@@ -70,10 +76,13 @@ def run_scripts():
                 "max-seq-len": 12,
                 "log-every-n": 10,
                 "model": {
-                    # "attention-weights-mode": "softmax",
-                    # "attention-weights-mode": "sigmoid",
-                    # "attention-weights-mode": "overtaking-sigmoid",
-                    "attention-weights-mode": "overtaking-sigmoid-tuned",
+                    #
+                    # main results here
+                    #
+                    "attention-weights-mode": "softmax", # 126.4 steps to diverge
+                    # "attention-weights-mode": "sigmoid",  # 77.0 mean steps to converge (some temporary instability/divergence)
+                    # "attention-weights-mode": "overtaking-sigmoid", # 64.0 mean steps to converge; 1/5 runs diverges
+                    # "attention-weights-mode": "overtaking-sigmoid-tuned", # 64.4 mean steps to converge
                     "embedding-dim": 64,
                     "attention-dim": 50,
                     "c-heads": 3
@@ -86,7 +95,10 @@ def run_scripts():
                 }
             }
         },
-        { "enabled": False,
+        #
+        # similarity experiments - Multi-head Self-Attention
+        #
+        { "enabled": True,
             "step-method": EruLanguageBuilder.train_self_attention_similarity,
             "outputs": {},
             "run-count": 5,
@@ -104,10 +116,13 @@ def run_scripts():
                 "max-seq-len": 12,
                 "log-every-n": 10,
                 "model": {
-                    # "attention-weights-mode": "softmax",
-                    # "attention-weights-mode": "sigmoid",
-                    # "attention-weights-mode": "overtaking-sigmoid",
-                    "attention-weights-mode": "overtaking-sigmoid-tuned",
+                    #
+                    # main results here
+                    #
+                    # "attention-weights-mode": "softmax", # 135.0 mean steps to converge
+                    # "attention-weights-mode": "sigmoid", # 81.4 steps to converge
+                    "attention-weights-mode": "overtaking-sigmoid", # 73.0 steps to converge ** winner
+                    # "attention-weights-mode": "overtaking-sigmoid-tuned", # 84.6 mean steps to converge
                     "embedding-dim": 64,
                     "attention-dim": 50,
                     "c-heads": 3
