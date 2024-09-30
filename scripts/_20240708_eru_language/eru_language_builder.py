@@ -4,7 +4,7 @@ from ml3 import CsvFile, CsvSchema, CsvLine, ProgressTrace, AllRandoms
 
 from fero_lib import OaiBuilder
 
-from eru_lib import (
+from eru_lib.v1 import (
     EruExampleStream,
     EruSimilarityExampleStream,
     EruGruBinaryClassificationWorkflow,
@@ -196,5 +196,5 @@ class EruLanguageBuilder(OaiBuilder):
         steps_to_convergence_average = \
             sum(len(log) for log in loss_logs_accepted) / len(loss_logs_accepted)
         print(f"steps to convergence, average: {steps_to_convergence_average}")
-        
+
         return
