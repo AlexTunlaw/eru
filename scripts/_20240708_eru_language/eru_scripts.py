@@ -1,23 +1,27 @@
-from .eru_language_site import EruLanguageSite
-from .eru_language_builder import EruLanguageBuilder
+from .eru_site import EruSite
+from .eru_builder_e1 import EruBuilderE1
+from .eru_builder_e2 import EruBuilderE2
 
 # ---------------------------------------------------------------------------
 
 def run_scripts():
 
     {
-        "e1": run_scripts_e1
+        "e1": run_scripts_e1,
+        "e2": run_scripts_e2,
     }[
-        "e1"
-    ]()
+        "e2"
+    ]       ()
+
+    return
 
 # ---------------------------------------------------------------------------
 
 def run_scripts_e1():
 
-    site = EruLanguageSite(data_dir="_data/_20240708_eru_language")
+    site = EruSite(data_dir="_data/_20240708_eru_language")
 
-    builder = EruLanguageBuilder(site, name_key="20240708")
+    builder = EruBuilderE1(site, name_key="20240708")
 
     language_params = {
         "vocab-size": 2000,
@@ -32,10 +36,10 @@ def run_scripts_e1():
 
     builder.run_steps([
         #
-        # language stats
+        # language data
         #
         { "enabled": False,
-            "step-method": EruLanguageBuilder.generate_e1_language_data,
+            "step-method": EruBuilderE1.generate_e1_language_data,
             "input": "__NONE__",
             "outputs": {
                 "training-data": "training-data: csv",
@@ -51,7 +55,7 @@ def run_scripts_e1():
         # binary classification experiments - GRU; baseline to show that the language is learnable
         #
         { "enabled": False,
-            "step-method": EruLanguageBuilder.train_e1_gru_binary_classification,
+            "step-method": EruBuilderE1.train_e1_gru_binary_classification,
             "language": language_params,
             "training-config": {
                 "early-stop": "FeroWindowBasedLossLevel() <= 0.05", # note
@@ -75,7 +79,7 @@ def run_scripts_e1():
         # binary classification experiments - Multi-head Self-Attention
         #
         { "enabled": True,
-            "step-method": EruLanguageBuilder.train_e1_self_attention_binary_classification,
+            "step-method": EruBuilderE1.train_e1_self_attention_binary_classification,
             "outputs": {
                 "loss-logs": "loss-logs: csv",
             },
@@ -111,7 +115,7 @@ def run_scripts_e1():
         # similarity experiments - Multi-head Self-Attention
         #
         { "enabled": True,
-            "step-method": EruLanguageBuilder.train_e1_self_attention_similarity,
+            "step-method": EruBuilderE1.train_e1_self_attention_similarity,
             "outputs": {},
             "run-count": 5,
             "language": language_params,
@@ -154,5 +158,33 @@ def run_scripts_e1():
 # ---------------------------------------------------------------------------
 
 def run_scripts_e2():
+
+    site = EruSite(data_dir="_data/_20240930_eru_language")
+
+    builder = EruBuilderE2(site, name_key="20240930")
+
+    builder.run_steps([
+        #
+        # language data
+        #
+        { "enabled": True,
+            "step-method": EruBuilderE2.generate_e2_language_data,
+            "input": "__NONE__",
+            "output": "training-data: csv",
+            "output-columns": (
+                "utterance",
+                "signature"
+            ),
+            "output-count": 300,
+            "language": {
+                "vocab-size": 100,
+                "classes": {
+                    0: (0.5, "*"),
+                    1: (0.5, [1, 2])
+                },
+                "utterance-len": 20,
+            },
+        },
+    ])
 
     print("DONE")

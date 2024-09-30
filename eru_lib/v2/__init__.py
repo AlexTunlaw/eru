@@ -1,0 +1,1 @@
+from .package.eru_ngram_language import EruNgramLanguage

@@ -14,7 +14,7 @@ from eru_lib.v1 import (
 
 # ---------------------------------------------------------------------------
 
-class EruLanguageBuilder(OaiBuilder):
+class EruBuilderE1(OaiBuilder):
 
     # -----------------------------------------------------------------------
 
@@ -47,7 +47,7 @@ class EruLanguageBuilder(OaiBuilder):
 
     def train_e1_gru_binary_classification(self, params):
 
-        AllRandoms.set_random_seed(13)
+        AllRandoms.set_random_seed(777)
 
         example_stream = EruExampleStream.make_from_config({
             **params["language"],
@@ -65,7 +65,7 @@ class EruLanguageBuilder(OaiBuilder):
 
     def train_e1_self_attention_binary_classification(self, params):
 
-        AllRandoms.set_random_seed(13)
+        AllRandoms.set_random_seed(777)
 
         example_stream = EruExampleStream.make_from_config({
             **params["language"],
@@ -161,7 +161,7 @@ class EruLanguageBuilder(OaiBuilder):
 
     def train_e1_self_attention_similarity(self, params):
 
-        AllRandoms.set_random_seed(13)
+        AllRandoms.set_random_seed(777)
 
         example_stream = EruSimilarityExampleStream.make_from_config({
             **params["language"],
