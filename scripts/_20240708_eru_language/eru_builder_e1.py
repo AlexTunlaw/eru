@@ -10,7 +10,7 @@ from eru_lib.v1 import (
     EruGruBinaryClassificationWorkflow,
     EruSelfAttentionBinaryClassificationWorkflow,
     EruSelfAttentionSimilarityWorkflow,
-)
+)   
 
 # ---------------------------------------------------------------------------
 
@@ -18,7 +18,7 @@ class EruLanguageBuilder(OaiBuilder):
 
     # -----------------------------------------------------------------------
 
-    def generate_language_data(self, params):
+    def generate_e1_language_data(self, params):
 
         training_data_file = self.get_path(params["outputs"]["training-data"])
         (
@@ -45,7 +45,7 @@ class EruLanguageBuilder(OaiBuilder):
     
     # -----------------------------------------------------------------------
 
-    def train_gru_binary_classification(self, params):
+    def train_e1_gru_binary_classification(self, params):
 
         AllRandoms.set_random_seed(13)
 
@@ -63,7 +63,7 @@ class EruLanguageBuilder(OaiBuilder):
 
     # -----------------------------------------------------------------------
 
-    def train_self_attention_binary_classification(self, params):
+    def train_e1_self_attention_binary_classification(self, params):
 
         AllRandoms.set_random_seed(13)
 
@@ -159,7 +159,7 @@ class EruLanguageBuilder(OaiBuilder):
 
     # -----------------------------------------------------------------------
 
-    def train_self_attention_similarity(self, params):
+    def train_e1_self_attention_similarity(self, params):
 
         AllRandoms.set_random_seed(13)
 

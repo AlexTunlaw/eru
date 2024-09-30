@@ -1,7 +1,19 @@
 from .eru_language_site import EruLanguageSite
 from .eru_language_builder import EruLanguageBuilder
 
+# ---------------------------------------------------------------------------
+
 def run_scripts():
+
+    {
+        "e1": run_scripts_e1
+    }[
+        "e1"
+    ]()
+
+# ---------------------------------------------------------------------------
+
+def run_scripts_e1():
 
     site = EruLanguageSite(data_dir="_data/_20240708_eru_language")
 
@@ -23,7 +35,7 @@ def run_scripts():
         # language stats
         #
         { "enabled": False,
-            "step-method": EruLanguageBuilder.generate_language_data,
+            "step-method": EruLanguageBuilder.generate_e1_language_data,
             "input": "__NONE__",
             "outputs": {
                 "training-data": "training-data: csv",
@@ -39,7 +51,7 @@ def run_scripts():
         # binary classification experiments - GRU; baseline to show that the language is learnable
         #
         { "enabled": False,
-            "step-method": EruLanguageBuilder.train_gru_binary_classification,
+            "step-method": EruLanguageBuilder.train_e1_gru_binary_classification,
             "language": language_params,
             "training-config": {
                 "early-stop": "FeroWindowBasedLossLevel() <= 0.05", # note
@@ -63,7 +75,7 @@ def run_scripts():
         # binary classification experiments - Multi-head Self-Attention
         #
         { "enabled": True,
-            "step-method": EruLanguageBuilder.train_self_attention_binary_classification,
+            "step-method": EruLanguageBuilder.train_e1_self_attention_binary_classification,
             "outputs": {
                 "loss-logs": "loss-logs: csv",
             },
@@ -99,7 +111,7 @@ def run_scripts():
         # similarity experiments - Multi-head Self-Attention
         #
         { "enabled": True,
-            "step-method": EruLanguageBuilder.train_self_attention_similarity,
+            "step-method": EruLanguageBuilder.train_e1_self_attention_similarity,
             "outputs": {},
             "run-count": 5,
             "language": language_params,
@@ -137,5 +149,10 @@ def run_scripts():
         }
     ])
 
-print("DONE")
+    print("DONE")
 
+# ---------------------------------------------------------------------------
+
+def run_scripts_e2():
+
+    print("DONE")
