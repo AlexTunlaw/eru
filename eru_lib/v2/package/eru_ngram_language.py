@@ -26,12 +26,26 @@ class EruNgramLanguage:
 
     # -----------------------------------------------------------------------
 
+    @classmethod
+    def make_from_config(cls, config):
+        return EruNgramLanguage(
+            vocab=list(range(config["vocab-size"])),
+            vocab_ps=config["vocab-ps"],
+            classes=config["classes"],
+            utterance_len=config["utterance-len"],
+        )
+
+    # -----------------------------------------------------------------------
+
     def __init__(self,
         vocab: List[Token],
+        vocab_ps: List[float],
         classes: Dict[Token, List[Tuple[float, Token]]],
         utterance_len: int,
     ):
         self.vocab = vocab
+        assert vocab_ps[0] == 0.0
+        self.vocab_ps = vocab_ps
         self.classes = [
             Class(label=label, ngram=ngram, p=p)
             for label, (p, ngram) in classes.items()
@@ -72,7 +86,7 @@ class EruNgramLanguage:
 
             # base
             utterance = [
-                np.random.choice(self.vocab)
+                np.random.choice(self.vocab, p=self.vocab_ps)
                 for _k in range(self.utterance_len - 1)
             ] + [EOU]
             assert len(utterance) == self.utterance_len

@@ -4,6 +4,8 @@ from fero_lib import OaiBuilder
 
 from eru_lib.v2 import (
     EruNgramLanguage,
+    EruExampleStream,
+    EruGruBinaryClassificationWorkflow,
 )   
 
 # ---------------------------------------------------------------------------
@@ -16,11 +18,7 @@ class EruBuilderE2(OaiBuilder):
 
         AllRandoms.set_random_seed(777)
 
-        language = EruNgramLanguage(
-            vocab=list(range(params["language"]["vocab-size"])),
-            classes=params["language"]["classes"],
-            utterance_len=params["language"]["utterance-len"],
-        )
+        language = EruNgramLanguage.make_from_config(params["language"])
 
         output_file = self.get_path(params["output"])
         (
@@ -38,4 +36,22 @@ class EruBuilderE2(OaiBuilder):
             }))
 
         CsvFile.save_to_csv(output_file, output_lines, output_schema)
+        return
+
+    # -----------------------------------------------------------------------
+
+    def train_e2_gru_binary_classification(self, params):
+
+        AllRandoms.set_random_seed(777)
+
+        example_stream = EruExampleStream.make_from_config({
+            **params["language"],
+            "mode": "binary-classification"
+        })
+
+        EruGruBinaryClassificationWorkflow.train(
+            example_stream=example_stream,
+            config=params["training-config"]
+        )
+
         return

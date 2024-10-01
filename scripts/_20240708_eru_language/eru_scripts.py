@@ -163,11 +163,24 @@ def run_scripts_e2():
 
     builder = EruBuilderE2(site, name_key="20240930")
 
+    utterance_len = 20
+    language_params = {
+        "language": {
+            "vocab-size": 100, # 0 is EOU (End Of Utterance)
+            "vocab-ps": [0.0, 0.2, 0.2] + ([0.6 / 97] * 97),
+            "classes": {
+                0: (0.5, "*"),
+                1: (0.5, [1, 2])
+            },
+            "utterance-len": utterance_len,
+        }
+    }
+
     builder.run_steps([
         #
         # language data
         #
-        { "enabled": True,
+        { "enabled": False,
             "step-method": EruBuilderE2.generate_e2_language_data,
             "input": "__NONE__",
             "output": "training-data: csv",
@@ -176,14 +189,31 @@ def run_scripts_e2():
                 "signature"
             ),
             "output-count": 300,
-            "language": {
-                "vocab-size": 100,
-                "classes": {
-                    0: (0.5, "*"),
-                    1: (0.5, [1, 2])
+            **language_params,
+        },
+        #
+        # binary classification experiments - GRU; baseline to show that the language is learnable
+        #
+        { "enabled": True,
+            "step-method": EruBuilderE2.train_e2_gru_binary_classification,
+            **language_params,
+            "training-config": {
+                "early-stop": "FeroWindowBasedLossLevel() <= 0.05", # note
+                "batch-size": 100,
+                "batch-count": 250,
+                "max-seq-len": utterance_len,
+                "log-every-n": 10,
+                "model": {
+                    "embedding-dim": 64,
+                    "gru-hidden-dim": 32
                 },
-                "utterance-len": 20,
-            },
+                "optimizer": {
+                    "adam": {
+                        "lr": 0.01,
+                        "wd": 0.05
+                    }
+                }
+            }
         },
     ])
 
