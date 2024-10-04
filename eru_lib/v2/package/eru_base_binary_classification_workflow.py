@@ -35,3 +35,25 @@ class EruBaseBinaryClassificationWorkflow(EruBaseWorkflow):
         x = torch.stack(utterances)
         y = torch.stack(labels)
         return x, y
+
+    # -----------------------------------------------------------------------
+
+    @classmethod
+    def get_workflow_metric(cls, y_predicted: torch.Tensor, y_labels: torch.Tensor):
+
+        # (torch version of this would be more concise, but this is nice when debugging)
+
+        y_predicted = y_predicted.tolist()
+        y_labels = y_labels.tolist()
+
+        assert len(y_predicted) == len(y_labels)
+
+        y_predicted_snapped = [
+            (1.0 if v > 0.5 else 0.0)
+            for v in y_predicted
+        ]
+
+        c_correct = sum(1 for v1, v2 in zip(y_predicted_snapped, y_labels) if v1 == v2)
+
+        return f"accuracy: {c_correct/len(y_labels)} (={c_correct}/{len(y_labels)})"
+    

@@ -1,3 +1,9 @@
 from .package.eru_ngram_language import EruNgramLanguage
 from .package.eru_example_stream import EruExampleStream
+
+from .package.eru_gru_binary_classification_model import EruGruBinaryClassificationModel
 from .package.eru_gru_binary_classification_workflow import EruGruBinaryClassificationWorkflow
+
+from .package.eru_self_attention_model import EruSelfAttentionModel
+from .package.eru_self_attention_binary_classification_model import EruSelfAttentionBinaryClassificationModel
+from .package.eru_self_attention_binary_classification_workflow import EruSelfAttentionBinaryClassificationWorkflow

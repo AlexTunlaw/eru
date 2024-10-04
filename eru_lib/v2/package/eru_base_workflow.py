@@ -43,6 +43,12 @@ class EruBaseWorkflow:
     # -----------------------------------------------------------------------
 
     @classmethod
+    def get_workflow_metric(cls, y_predicted: torch.Tensor, y_labels: torch.Tensor):
+        return ""
+    
+    # -----------------------------------------------------------------------
+
+    @classmethod
     def train(cls, example_stream, config):
 
         batch_size = config["batch-size"]
@@ -76,14 +82,10 @@ class EruBaseWorkflow:
             x = batch[:-1]
             y_labels = batch[-1]
 
-            y_predicted = model.forward(
-                *x,
-                observe_fn=observe_forward_fn,
-                i_batch=i_batch,
-            )
+            y_predicted = model.forward(*x)
 
             loss = loss_fn(y_predicted, y_labels)
-            loss_value = loss.item()
+            loss_value = loss.item() / y_predicted.shape[0] * 100 # note: this loss normalization is purely to account for batches of various sizes
 
             loss.backward()
             optimizer.step()
@@ -91,7 +93,10 @@ class EruBaseWorkflow:
             # misc
 
             if (i_batch % log_every_n) == 0:
-                print(f"batch: {i_batch}, loss: {loss_value:.05f}")
+                workflow_metrics_info = cls.get_workflow_metric(y_predicted, y_labels)
+                if workflow_metrics_info:
+                    workflow_metrics_info = ", " + workflow_metrics_info
+                print(f"batch: {i_batch}, loss: {loss_value:.05f}{workflow_metrics_info}")
 
             if loss_level_detector is not None and loss_threshold is not None:
                 loss_level_detector.observe(loss_value)

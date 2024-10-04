@@ -17,7 +17,7 @@ class EruSelfAttentionBinaryClassificationModel(EruSelfAttentionModel):
         embedding_dim,
         attention_dim,
         c_heads,
-        attention_weights_mode: str="overtaking-sigmoid",
+        c_layers=1,
         dropout=None
     ):
 
@@ -26,7 +26,7 @@ class EruSelfAttentionBinaryClassificationModel(EruSelfAttentionModel):
             embedding_dim=embedding_dim,
             attention_dim=attention_dim,
             c_heads=c_heads,
-            attention_weights_mode=attention_weights_mode,
+            c_layers=c_layers,
             dropout=dropout
         )
 
@@ -37,16 +37,12 @@ class EruSelfAttentionBinaryClassificationModel(EruSelfAttentionModel):
 
     # -----------------------------------------------------------------------
 
-    def forward(self, x, observe_fn=None, i_batch=None):
+    def forward(self, x):
 
         batch_size, seq_len = x.shape
 
         # -> batch_size, c_heads, seq_len, embedding_dim
-        r_all_heads = super().forward(
-            x=x,
-            observe_fn=observe_fn,
-            i_batch=i_batch
-        )
+        r_all_heads = super().forward(x=x)
 
         # We use BOS (token 0) for seq meaning
         # -> batch_size, c_heads, embedding_dim
