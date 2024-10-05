@@ -107,9 +107,11 @@ class EruBuilderE2(OaiBuilder):
         for i_run, log in enumerate(loss_logs):
             for k, v in enumerate(log):
                 output_lines[k][f"run-{i_run}"] = f"{v:.4f}"
-        CsvFile.save_to_csv(
-            self.get_path(params["outputs"]["loss-logs"]),
-            output_lines, output_schema
-        )
+
+        if "loss-logs" in params["outputs"]:
+            CsvFile.save_to_csv(
+                self.get_path(params["outputs"]["loss-logs"]),
+                output_lines, output_schema
+            )
 
         return
