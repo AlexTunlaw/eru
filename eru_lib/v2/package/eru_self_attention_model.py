@@ -106,8 +106,8 @@ class EruSelfAttentionModel(torch.nn.Module):
 
         layer_output_cur = embedded_repeated
         for layer in self.layers:
-            layer_output_cur = layer.forward(layer_output_cur)
             # batch, num-heads, seq, attention-v-d
+            layer_output_cur = layer.forward(layer_output_cur)
 
         output_valued = layer_output_cur
         return output_valued

@@ -194,7 +194,7 @@ def run_scripts_e2():
         #
         # binary classification experiments - GRU; baseline to show that the language is learnable
         #
-        { "enabled": False,
+        { "enabled": True,
             "step-method": EruBuilderE2.train_e2_gru_binary_classification,
             **language_params,
             "training-config": {
@@ -218,7 +218,7 @@ def run_scripts_e2():
         #
         # binary classification experiments - Multi-head Self-Attention
         #
-        { "enabled": True,
+        { "enabled": False,
             "step-method": EruBuilderE2.train_e2_self_attention_binary_classification,
             "outputs": {},
             "run-count": 5,
@@ -235,7 +235,7 @@ def run_scripts_e2():
                     "c-heads": 1, # FIXED, strictly 1 head
                     # MAIN OBSERVATION here
                     # "c-layers": 1, # 1 not supposed to converge (and doesn't, with loss flat at 0.4)
-                    "c-layers": 2, # 2: converges at 127.8 steps (of 5 runs) [It's interesting that this is faster than 3 heads]
+                    "c-layers": 2, # 2: converges at 64.6 steps (of 5 runs) [It's interesting that this is faster than 3 heads]
                 },
                 "optimizer": {
                     "adam": {
@@ -261,8 +261,8 @@ def run_scripts_e2():
                     "attention-dim": 14,
                     "c-heads": 3, # FIXED at 3, allows for head interaction learning
                     # MAIN OBSERVATION here
-                    "c-layers": 1, # 1: converges via head interaction at 373.0 (of 5 runs)
-                    # "c-layers": 2, # 2: converges at 141.0 steps (of 5 runs)
+                    "c-layers": 1, # 1: converges via head interaction at 70.4 (of 5 runs)
+                    # "c-layers": 2, # 2: converges at 70.8 steps (of 5 runs). ?: Via head interaction or layers?
                 },
                 "optimizer": {
                     "adam": {

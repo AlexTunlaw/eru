@@ -33,9 +33,7 @@ class EruGruBinaryClassificationModel(torch.nn.Module):
 
     # -----------------------------------------------------------------------
 
-    def forward(self, x, observe_fn=None, i_batch=None):
-
-        assert observe_fn is None, "observing not supported for the model"
+    def forward(self, x):
 
         embedded = self.embedding(x)
         

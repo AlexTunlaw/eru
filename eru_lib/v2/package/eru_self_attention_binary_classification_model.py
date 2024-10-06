@@ -44,13 +44,13 @@ class EruSelfAttentionBinaryClassificationModel(EruSelfAttentionModel):
         # -> batch_size, c_heads, seq_len, embedding_dim
         r_all_heads = super().forward(x=x)
 
-        # We use BOS (token 0) for seq meaning
+        # We use EOU (last token) for seq meaning
         # -> batch_size, c_heads, embedding_dim
-        r_all_heads_bos = r_all_heads[:, :, 0, :]
+        r_all_heads_eou = r_all_heads[:, :, -1, :]
 
         # -> batch_size
         output = self.sigmoid(
-            self.fc(r_all_heads_bos.reshape(batch_size, -1)
+            self.fc(r_all_heads_eou.reshape(batch_size, -1)
             ).reshape(batch_size)
         )
         assert output.shape == (batch_size, )
