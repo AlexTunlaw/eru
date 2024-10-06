@@ -194,7 +194,7 @@ def run_scripts_e2():
         #
         # binary classification experiments - GRU; baseline to show that the language is learnable
         #
-        { "enabled": True,
+        { "enabled": False,
             "step-method": EruBuilderE2.train_e2_gru_binary_classification,
             **language_params,
             "training-config": {
@@ -245,7 +245,7 @@ def run_scripts_e2():
                 }
             }
         },
-        { "enabled": False,
+        { "enabled": True,
             "step-method": EruBuilderE2.train_e2_self_attention_binary_classification,
             "outputs": {},
             "run-count": 5,
