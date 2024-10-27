@@ -50,7 +50,8 @@ class EruSelfAttentionBinaryClassificationModel(EruSelfAttentionModel):
 
         # -> batch_size
         output = self.sigmoid(
-            self.fc(r_all_heads_eou.reshape(batch_size, -1)
+            self.fc(
+                r_all_heads_eou.reshape(batch_size, -1)
             ).reshape(batch_size)
         )
         assert output.shape == (batch_size, )

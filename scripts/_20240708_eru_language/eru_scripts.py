@@ -78,7 +78,7 @@ def run_scripts_e1():
         #
         # binary classification experiments - Multi-head Self-Attention
         #
-        { "enabled": True,
+        { "enabled": False,
             "step-method": EruBuilderE1.train_e1_self_attention_binary_classification,
             "outputs": {
                 "loss-logs": "loss-logs: csv",
@@ -114,7 +114,7 @@ def run_scripts_e1():
         #
         # similarity experiments - Multi-head Self-Attention
         #
-        { "enabled": True,
+        { "enabled": False,
             "step-method": EruBuilderE1.train_e1_self_attention_similarity,
             "outputs": {},
             "run-count": 5,
@@ -245,7 +245,7 @@ def run_scripts_e2():
                 }
             }
         },
-        { "enabled": True,
+        { "enabled": False,
             "step-method": EruBuilderE2.train_e2_self_attention_binary_classification,
             "outputs": {},
             "run-count": 5,
@@ -261,13 +261,56 @@ def run_scripts_e2():
                     "attention-dim": 14,
                     "c-heads": 3, # FIXED at 3, allows for head interaction learning
                     # MAIN OBSERVATION here
-                    "c-layers": 1, # 1: converges via head interaction at 70.4 (of 5 runs)
-                    # "c-layers": 2, # 2: converges at 70.8 steps (of 5 runs). ?: Via head interaction or layers?
+                    # "c-layers": 1, # 1: converges via head interaction at 70.4 (of 5 runs)
+                    "c-layers": 2, # 2: converges at 70.8 steps (of 5 runs). ?: Via head interaction or layers?
                 },
                 "optimizer": {
                     "adam": {
                         "lr": 0.02,
                         "wd": 0.01
+                    }
+                }
+            }
+        },
+        #
+        # 10/26/2024 experimentation
+        #
+        # 2 transformer layers, momentum: x is attention_weights, x + (1 - x) * x**2.0 (gamma is 2.0); lr 0.02, wd 0.01
+        # No intrinsic pretraining: 44.6 <-- baseline
+        # with 50 steps of intrinsic pretraining: 88.8 - 50 = 38.8
+        # with 100 steps of intrinsic pretraining: 135.8 - 100 = 35.8 <-- winner, but at a price of +100 pretraining steps
+        # with every other step of intrinsic pretraining: 61.6
+        # with 1, 2 out of 10 steps of intrinsic pretraining: 52.8
+        # with sum-mix 1.0, 100.0 with intrinsic pretraining: 40.0
+        # with sum-mix 1.0, 10.0 with intrinsic pretraining: 36.4 <-- winner
+        #
+        # 2 transformer layers, momentum: x is attention_weights, x + (1 - x) * x**2.0 (gamma is 2.0); lr 0.05, wd 0.0
+        # No intrinsic pretraining: 20.2 <-- baseline
+        # with 10 steps of intrinsic pretraining: 33.8 - 10 = 22.8
+        #
+        { "enabled": True,
+            "step-method": EruBuilderE2.train_e2_self_attention_binary_classification,
+            "outputs": {},
+            "run-count": 5,
+            **language_params,
+            "training-config": {
+                "early-stop": "FeroWindowBasedLossLevel() <= 0.15", # note
+                "batch-size": 100,
+                "batch-count": 500,
+                "max-seq-len": utterance_len,
+                "log-every-n": 10,
+                "model": {
+                    "embedding-dim": 16,
+                    "attention-dim": 14,
+                    "c-heads": 3, # FIXED at 3, allows for head interaction learning
+                    # MAIN OBSERVATION here
+                    # "c-layers": 1, # 1: converges via head interaction at 70.4 (of 5 runs)
+                    "c-layers": 2, # 2: converges at 70.8 steps (of 5 runs). ?: Via head interaction or layers?
+                },
+                "optimizer": {
+                    "adam": {
+                        "lr": 0.05, # 0.02,
+                        "wd": 0.0, # 0.01,
                     }
                 }
             }

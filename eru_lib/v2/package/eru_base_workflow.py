@@ -55,11 +55,11 @@ class EruBaseWorkflow:
         batch_count = config["batch-count"]
         max_seq_len = config["max-seq-len"]
         log_every_n = config.get("log-every-n", 1)
-        observe_forward_fn = config.get("observe-forward-fn")
 
         model = cls.make_model(example_stream, config)
 
-        optimizer = torch.optim.AdamW(model.parameters(), # note it's actually AdamW
+        optimizer = torch.optim.AdamW(
+            model.parameters(), 
             lr=config["optimizer"]["adam"]["lr"],
             weight_decay=config["optimizer"].get("adam", {}).get("wd", 0.0)
         )

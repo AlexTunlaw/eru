@@ -10,11 +10,12 @@ import torch
 
 # ---------------------------------------------------------------------------
 
-class SelfAttention:
+class SelfAttention(torch.nn.Module):
 
     # -----------------------------------------------------------------------
 
     def __init__(self, input_dim, attention_dim, output_dim, c_heads):
+        super().__init__()
         self.layer_norm = torch.nn.LayerNorm((input_dim,))
         self.W_key = torch.nn.Parameter(torch.rand(c_heads, attention_dim, input_dim))
         self.W_query = torch.nn.Parameter(torch.rand(c_heads, attention_dim, input_dim))

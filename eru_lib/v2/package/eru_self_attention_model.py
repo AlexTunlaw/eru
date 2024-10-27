@@ -27,7 +27,7 @@ class EruSelfAttentionModel(torch.nn.Module):
         self.c_heads = c_heads
         attention_v_dim = embedding_dim # attention value dimensionality
 
-        self.layers = [
+        self.layers = torch.nn.ModuleList([
             SelfAttention(
                 input_dim=embedding_dim,
                 attention_dim=attention_dim,
@@ -42,7 +42,7 @@ class EruSelfAttentionModel(torch.nn.Module):
                 c_heads=c_heads,
             )
             for _i_layer in range(c_layers - 1)
-        ]
+        ])
 
         return
 
