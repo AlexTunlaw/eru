@@ -14,18 +14,19 @@ class SelfAttention(torch.nn.Module):
 
     # -----------------------------------------------------------------------
 
-    def __init__(self, input_dim, attention_dim, output_dim, c_heads):
+    def __init__(self, input_dim, attention_dim, output_dim, c_heads, desc:str=None):
         super().__init__()
         self.layer_norm = torch.nn.LayerNorm((input_dim,))
         self.W_key = torch.nn.Parameter(torch.rand(c_heads, attention_dim, input_dim))
         self.W_query = torch.nn.Parameter(torch.rand(c_heads, attention_dim, input_dim))
         self.W_value = torch.nn.Parameter(torch.rand(c_heads, output_dim, input_dim))
         self.scale = math.sqrt(input_dim)
+        self.desc = desc
         return
 
     # -----------------------------------------------------------------------
 
-    def forward(self, input):
+    def forward(self, input, observe_fn=None):
 
         # batch, num-heads, seq, input-d
         input_normalized = self.layer_norm(input)
@@ -45,5 +46,16 @@ class SelfAttention(torch.nn.Module):
 
         # batch, num-heads, seq, output-d
         output_valued = torch.matmul(attention_weights, values)
+
+        if observe_fn is not None:
+            observe_fn(ctx={
+                "kind": f"self-attention {self.desc}",
+                "queries": queries,
+                "keys": keys,
+                "values": values,
+                "attention-scores": attention_scores,
+                "attention-weights": attention_weights,
+                "output-valued": output_valued
+            })
 
         return output_valued

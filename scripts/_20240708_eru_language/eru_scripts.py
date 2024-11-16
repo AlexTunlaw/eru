@@ -337,19 +337,19 @@ def run_scripts_e2():
             "training-config": {
                 "early-stop": "FeroWindowBasedLossLevel() <= 0.15", # note
                 "batch-size": 100,
-                "batch-count": 500,
+                "batch-count": 200,
                 "max-seq-len": utterance_len,
                 "log-every-n": 10,
                 "model": {
                     "embedding-dim": 16,
                     "attention-dim": 14,
-                    "c-heads": 3,
+                    "c-heads": 1,
                     # "c-layers": 1,
                     "c-layers": 2,
                 },
                 "optimizer": {
                     "adam": {
-                        "lr": 0.05, # 0.02,
+                        "lr": 0.01, # 0.02,
                         "wd": 0.0, # 0.01,
                     }
                 }

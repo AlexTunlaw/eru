@@ -37,22 +37,31 @@ class EruSelfAttentionBinaryClassificationModel(EruSelfAttentionModel):
 
     # -----------------------------------------------------------------------
 
-    def forward(self, x):
+    def forward(self, x, observe_fn=None):
 
         batch_size, seq_len = x.shape
 
         # -> batch_size, c_heads, seq_len, embedding_dim
-        r_all_heads = super().forward(x=x)
+        r_all_heads = super().forward(x=x, observe_fn=observe_fn)
 
         # We use EOU (last token) for seq meaning
         # -> batch_size, c_heads, embedding_dim
         r_all_heads_eou = r_all_heads[:, :, -1, :]
 
+        #..todo
+        logits = self.fc(
+            r_all_heads_eou.reshape(batch_size, -1)
+        ).reshape(batch_size)
+
         # -> batch_size
-        output = self.sigmoid(
-            self.fc(
-                r_all_heads_eou.reshape(batch_size, -1)
-            ).reshape(batch_size)
-        )
+        output = self.sigmoid(logits)
         assert output.shape == (batch_size, )
+
+        if observe_fn is not None:
+            observe_fn(ctx={
+                "kind": "classification-head",
+                "logits": logits,
+                "output": output,
+            })
+
         return output

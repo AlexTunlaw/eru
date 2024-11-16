@@ -49,7 +49,7 @@ class EruBaseWorkflow:
     # -----------------------------------------------------------------------
 
     @classmethod
-    def train(cls, example_stream, config):
+    def train(cls, example_stream, config, observe_fn):
 
         batch_size = config["batch-size"]
         batch_count = config["batch-count"]
@@ -63,6 +63,13 @@ class EruBaseWorkflow:
             lr=config["optimizer"]["adam"]["lr"],
             weight_decay=config["optimizer"].get("adam", {}).get("wd", 0.0)
         )
+
+        def accumulative_observe(ctx_cumulative, ctx, flush_accumulation=False):
+            if observe_fn is not None:
+                ctx_cumulative[str(ctx["kind"])] = ctx
+                if flush_accumulation:
+                    observe_fn(ctx_cumulative)
+            return
 
         loss_fn = cls.make_loss_fn()
 
@@ -82,9 +89,23 @@ class EruBaseWorkflow:
             x = batch[:-1]
             y_labels = batch[-1]
 
-            y_predicted = model.forward(*x)
+            ctx_cumulative = {}
+
+            y_predicted = model.forward(
+                *x,
+                observe_fn=lambda ctx: accumulative_observe(ctx_cumulative=ctx_cumulative, ctx=ctx)
+            )
 
             loss = loss_fn(y_predicted, y_labels)
+            accumulative_observe(ctx_cumulative=ctx_cumulative, ctx={
+                "kind": "batch",
+                "i-batch": i_batch,
+                "x": x,
+                "y-labels": y_labels,
+                "y-predicted": y_predicted,
+                "loss": loss
+            }, flush_accumulation=True)
+
             loss_value = loss.item() / y_predicted.shape[0] * 100 # note: this loss normalization is purely to account for batches of various sizes
 
             loss.backward()
