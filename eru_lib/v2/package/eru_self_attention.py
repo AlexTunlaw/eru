@@ -14,7 +14,7 @@ class SelfAttention(torch.nn.Module):
 
     # -----------------------------------------------------------------------
 
-    def __init__(self, input_dim, attention_dim, output_dim, c_heads, desc:str=None):
+    def __init__(self, input_dim, attention_dim, output_dim, c_heads, desc:str=None, mode="softmax"):
         super().__init__()
         self.layer_norm = torch.nn.LayerNorm((input_dim,))
         self.W_key = torch.nn.Parameter(torch.rand(c_heads, attention_dim, input_dim))
@@ -22,6 +22,9 @@ class SelfAttention(torch.nn.Module):
         self.W_value = torch.nn.Parameter(torch.rand(c_heads, output_dim, input_dim))
         self.scale = math.sqrt(input_dim)
         self.desc = desc
+
+        self.mode = mode
+        self.overtaking_sigmoid = torch.nn.Sigmoid()
         return
 
     # -----------------------------------------------------------------------
@@ -42,7 +45,32 @@ class SelfAttention(torch.nn.Module):
         attention_scores = torch.matmul(queries, keys.permute(0, 1, 3, 2)) / self.scale
 
         # batch, num-heads, seq, seq
-        attention_weights = torch.softmax(attention_scores, dim=-1)
+        match self.mode:
+
+            case "softmax": # classic/textbook
+                attention_weights = torch.softmax(attention_scores, dim=-1)
+
+            case "sigmoid": # not robust for simple eru languages (e.g. bigram-based binary classification)
+                sigmoid_domain = 5
+                attention_scores_max = torch.max(attention_scores, dim=-1).values.unsqueeze(-1)
+                attention_scores_min = torch.min(attention_scores, dim=-1).values.unsqueeze(-1)
+                attention_scores_normalized = (attention_scores - attention_scores_min) / (attention_scores_max - attention_scores_min)
+                attention_weights = \
+                    self.overtaking_sigmoid(attention_scores_normalized * 2 * sigmoid_domain - sigmoid_domain)
+
+            case "overtaking-sigmoid-tuned": # novel
+                sigmoid_domain = 5
+                attention_scores_max = torch.max(attention_scores, dim=-1).values.unsqueeze(-1)
+                attention_scores_min = torch.min(attention_scores, dim=-1).values.unsqueeze(-1)
+                attention_scores_normalized = (attention_scores - attention_scores_min) / (attention_scores_max - attention_scores_min)
+                softmax_selector = 1.0 - torch.sigmoid(
+                    (1.0 - torch.max(attention_scores_normalized, dim=-1).values.unsqueeze(-1)) * \
+                        2.0 * sigmoid_domain + sigmoid_domain
+                )
+                sigmoid_selector = 1.0 - softmax_selector
+                attention_weights = \
+                    softmax_selector * torch.softmax(attention_scores_normalized, dim=-1) + \
+                    sigmoid_selector * self.overtaking_sigmoid(attention_scores_normalized * 2 * sigmoid_domain - sigmoid_domain)
 
         # batch, num-heads, seq, output-d
         output_valued = torch.matmul(attention_weights, values)

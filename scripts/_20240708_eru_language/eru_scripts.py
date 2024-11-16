@@ -343,7 +343,7 @@ def run_scripts_e2():
                 "model": {
                     "embedding-dim": 16,
                     "attention-dim": 14,
-                    "c-heads": 1,
+                    "c-heads": 1, #NOTE 1: easy to see convergence patterns; 3: fast, robust convergence
                     # "c-layers": 1,
                     "c-layers": 2,
                 },
