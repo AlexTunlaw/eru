@@ -103,8 +103,7 @@ class EruBuilderE2(OaiBuilder):
         # observations
         #
 
-        # observation_mode = "layer 0 - EOS to 0, 1, 2"
-        observation_mode = "layers 0,1 - 01, 10, 02"
+        observation_mode = params["observation-mode"]
 
         # Note: in this experiment, tokens 0 and 1 carry signal; all others are random.
         # We use token 2 as a representative of noise.

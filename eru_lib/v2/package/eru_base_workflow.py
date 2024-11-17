@@ -58,11 +58,15 @@ class EruBaseWorkflow:
 
         model = cls.make_model(example_stream, config)
 
-        optimizer = torch.optim.AdamW(
-            model.parameters(), 
-            lr=config["optimizer"]["adam"]["lr"],
-            weight_decay=config["optimizer"].get("adam", {}).get("wd", 0.0)
-        )
+        lr = config["optimizer"]["adam"]["lr"]
+        if isinstance(lr, float):
+            optimizer = torch.optim.AdamW(
+                model.parameters(), 
+                lr=lr,
+                weight_decay=config["optimizer"].get("adam", {}).get("wd", 0.0)
+            )
+        else:
+            optimizer = torch.optim.AdamW(lr(model))
 
         def accumulative_observe(ctx_cumulative, ctx, flush_accumulation=False):
             if observe_fn is not None:

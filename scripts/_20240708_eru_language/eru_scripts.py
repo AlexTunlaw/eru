@@ -327,9 +327,9 @@ def run_scripts_e2():
         #
         # baseline 10/27/2024
         #
-        # Steps to converge: 20.6 of 5 runs
+        # steps to converge: 20.6 of 5 runs
         #
-        { "enabled": True,
+        { "enabled": False,
             "step-method": EruBuilderE2.train_e2_self_attention_binary_classification,
             "outputs": {},
             "run-count": 5,
@@ -353,7 +353,45 @@ def run_scripts_e2():
                         "wd": 0.0, # 0.01,
                     }
                 }
-            }
+            },
+            "observation-mode": "layers 0,1 - 01, 10, 02", # "layers 0,1 - 01, 10, 02", "layer 0 - EOS to 0, 1, 2"
+        },
+        #
+        # individual learning rates 11/16/2024
+        #
+        # Uniform, 0.01: converges in 14.2 steps, of 15 runs
+        #
+        { "enabled": True,
+            "step-method": EruBuilderE2.train_e2_self_attention_binary_classification,
+            "outputs": {},
+            "run-count": 5,
+            **language_params,
+            "training-config": {
+                "early-stop": "FeroWindowBasedLossLevel() <= 0.25", # note
+                "batch-size": 100,
+                "batch-count": 200,
+                "max-seq-len": utterance_len,
+                "log-every-n": 10,
+                "model": {
+                    "embedding-dim": 16,
+                    "attention-dim": 14,
+                    "c-heads": 1, #NOTE 1: easy to see convergence patterns; 3: fast, robust convergence
+                    # "c-layers": 1,
+                    "c-layers": 2,
+                },
+                "optimizer": {
+                    "adam": {
+                        "lr": lambda model: [
+                            {"params": model.embedding.parameters(), "lr": 0.01 / 4},
+                            {"params": model.layers[0].parameters(), "lr": 0.01 / 2},
+                            {"params": model.layers[1].parameters(), "lr": 0.01},
+                            {"params": model.fc.parameters(), "lr": 0.01 * 2},
+                        ],
+                        "wd": 0.0, # 0.01,
+                    }
+                }
+            },
+            "observation-mode": "layers 0,1 - 01, 10, 02", # "layers 0,1 - 01, 10, 02", "layer 0 - EOS to 0, 1, 2"
         },
     ])
 
