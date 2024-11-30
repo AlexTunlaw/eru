@@ -1,6 +1,7 @@
 from .eru_site import EruSite
 from .eru_builder_e1 import EruBuilderE1
-from .eru_builder_e2 import EruBuilderE2, AttentionLevelsObserver
+from .eru_builder_e2 import EruBuilderE2
+from .attention_levels_observers import AttentionLevels01Observer
 
 # ---------------------------------------------------------------------------
 
@@ -391,7 +392,7 @@ def run_scripts_e2():
                     }
                 }
             },
-            "make-observer-fn": lambda: AttentionLevelsObserver(
+            "make-observer-fn": lambda: AttentionLevels01Observer(
                 # observation_target="layer 0 - EOS to 0, 1, 2",
                 observation_target="layers 0,1 - 01, 10, 02, EOS",
             ),
