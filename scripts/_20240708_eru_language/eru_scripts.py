@@ -393,11 +393,13 @@ def run_scripts_e2():
                     }
                 }
             },
-            # "make-observer-fn": lambda: AttentionLevels01Observer(
-            #     # observation_target="layer 0 - EOS to 0, 1, 2",
-            #     observation_target="layers 0,1 - 01, 10, 02, EOS",
-            # ),
-            "make-observer-fn": lambda: ProjectionsObserver(observed_layers=["self-attention 1"]),
+            "make-observer-fn": lambda: AttentionLevels01Observer(
+                # observation_target="layer 0 - EOS to 1, 2",
+                observation_target="layers 0,1 - 12, 21, EOS",
+            ),
+            # "make-observer-fn": lambda: ProjectionsObserver(observed_layers=["self-attention 0"]),
+            # "make-observer-fn": lambda: ProjectionsObserver(observed_layers=["self-attention 1"]),
+            # Note: I am not seeing keys and queries meet after tsne; does this mean that only some part of representation is participating in cosine similarity?
         },
     ])
 

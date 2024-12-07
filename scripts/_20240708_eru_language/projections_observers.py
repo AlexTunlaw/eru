@@ -29,50 +29,48 @@ class ProjectionsObserver(ObserverBase):
 
         i_sample = 0 # we examine a single sample in every batch
         x = ctx["batch"]["x"][0]
-        is_all_single_observation_targets = lambda iss: \
-            all(len(is_) == 1 for is_ in iss) #TODO what happens with attention when miltiple i_0 and i_1 are present? Does it split?
+        is_all_satisfactory_observation_targets = lambda iss: \
+            all(len(is_) >= 1 for is_ in iss) #TODO what happens with attention when miltiple i_0 and i_1 are present? Does it split?
 
         while i_sample < x.shape[0]:
             x_values = x[i_sample].tolist()
-            i0s, i1s, i2s = [], [], []
+            i1s, i2s = [], []
             for i, v in enumerate(x_values):
-                match v: # in this setup, tokens 0 and 1 carry main signal - we track them
-                    case 0: i0s.append(i)
+                match v: # in this setup, tokens 1 and 2 carry main signal - we track them. Token 3 is irrelevant and is a baseline
                     case 1: i1s.append(i)
                     case 2: i2s.append(i)
-            if is_all_single_observation_targets([i0s, i1s]) and len(i2s) >= 1:
+            if is_all_satisfactory_observation_targets([i1s, i2s]):
                 break
             i_sample += 1
 
-        if is_all_single_observation_targets([i0s, i1s]) and len(i2s) >= 1:
+        if is_all_satisfactory_observation_targets([i1s, i2s]):
 
-            i0, i1, i2, iEOS = i0s[0], i1s[0], i2s[0], -1
+            i1, i2, iEOS = i1s[0], i2s[0], -1
             observations_cur = []
             c_heads = ctx["self-attention 0"]["keys"][i_sample].shape[0]
             observation_plan = (
                 (
                     [
-                        ((0, i0), "self-attention 0", "keys"),
                         ((1, i1), "self-attention 0", "keys"),
                         ((2, i2), "self-attention 0", "keys"),
-                        # (("EOS", iEOS), "self-attention 0", "keys"),
-                        ((0, i0), "self-attention 0", "queries"),
+                        (("EOS", iEOS), "self-attention 0", "keys"),
                         ((1, i1), "self-attention 0", "queries"),
                         ((2, i2), "self-attention 0", "queries"),
-                        # (("EOS", iEOS), "self-attention 0", "queries"),
+                        (("EOS", iEOS), "self-attention 0", "queries"),
                     ]
                     if "self-attention 0" in self.observed_layers
                     else []
                 ) + (
                     [
-                        ((0, i0), "self-attention 1", "keys"),
                         ((1, i1), "self-attention 1", "keys"),
                         ((2, i2), "self-attention 1", "keys"),
                         (("EOS", iEOS), "self-attention 1", "keys"),
-                        ((0, i0), "self-attention 1", "queries"),
                         ((1, i1), "self-attention 1", "queries"),
                         ((2, i2), "self-attention 1", "queries"),
                         (("EOS", iEOS), "self-attention 1", "queries"),
+                        # ((1, i1), "self-attention 1", "values"),
+                        # ((2, i2), "self-attention 1", "values"),
+                        # (("EOS", iEOS), "self-attention 1", "values"),
                     ]
                     if "self-attention 1" in self.observed_layers
                     else []
@@ -82,9 +80,14 @@ class ProjectionsObserver(ObserverBase):
                 for i_head in range(c_heads):
                     observations_cur.append((
                         "|".join([self_attention_layer, kind, str(i_head), str(token)]),
-                        ctx[self_attention_layer][kind][i_sample][i_head][token_i].tolist()
+                        ctx[self_attention_layer][kind][i_sample][i_head][token_i].tolist(),
                     ))
-            self.observations.append(observations_cur)
+            self.observations.append({
+                "i-batch": ctx["batch"]["i-batch"],
+                "i-sample": i_sample,
+                "x": x_values,
+                "points": observations_cur
+            })
 
         return
 
@@ -92,7 +95,13 @@ class ProjectionsObserver(ObserverBase):
 
     def finalize(self, params):
 
-        tuples_flat = [(legend, point) for legend, point in sum(self.observations, [])] # tuple layout enforcement and flattenning
+        tsne_perplexity = 30
+
+        tuples_flat = [
+            (legend, point) # tuple layout enforcement and flattening
+            for observations_cur in self.observations
+            for legend, point in observations_cur["points"]
+        ]
 
         colors_by_legend = {}
         all_colors = list(color for color in colors_full_map.keys() if color.startswith("xkcd"))
@@ -104,7 +113,7 @@ class ProjectionsObserver(ObserverBase):
 
         points_flat = np.array([point for _legend, point in tuples_flat])
 
-        tsne = TSNE(n_components=2, random_state=777)
+        tsne = TSNE(n_components=2, perplexity=tsne_perplexity, random_state=777)
         points_flat_2d = tsne.fit_transform(points_flat)
 
         points_flat_2d_by_legend = {
@@ -138,7 +147,7 @@ class ProjectionsObserver(ObserverBase):
                 zorder=10,
                 c=colors_by_legend[legend],
             )
-        plt.title('2d projection, t-SNE')
+        plt.title('2d t-SNE of kqv')
         plt.xlabel('x')
         plt.ylabel('y')
         plt.legend()
