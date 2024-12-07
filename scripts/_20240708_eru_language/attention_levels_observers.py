@@ -1,7 +1,6 @@
 from typing import Iterable, Tuple
 
 import numpy as np
-from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
 
 from .observer_base import ObserverBase
@@ -25,15 +24,16 @@ class AttentionLevels01Observer(ObserverBase):
         return
 
     # -----------------------------------------------------------------------
-
     # Note: in this experiment, tokens 0 and 1 carry signal; all others are random.
     # We use token 2 as a representative of noise.
+
     def observe(self, ctx):
 
         i_sample = 0 # we examine a single sample in every batch
         x = ctx["batch"]["x"][0]
         is_all_single_observation_targets = lambda iss: \
             all(len(is_) == 1 for is_ in iss) #TODO what happens with attention when miltiple i_0 and i_1 are present? Does it split?
+        
         while i_sample < x.shape[0]:
             x_values = x[i_sample].tolist()
             i0s, i1s, i2s = [], [], []
@@ -45,7 +45,9 @@ class AttentionLevels01Observer(ObserverBase):
             if is_all_single_observation_targets([i0s, i1s]) and len(i2s) >= 1:
                 break
             i_sample += 1
+    
         if is_all_single_observation_targets([i0s, i1s]) and len(i2s) >= 1:
+
             i0, i1, i2, iEOS = i0s[0], i1s[0], i2s[0], -1
             observations_cur = {
                 "batch": ctx["batch"]["i-batch"],
