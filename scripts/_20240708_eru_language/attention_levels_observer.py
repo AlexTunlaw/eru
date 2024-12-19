@@ -24,8 +24,8 @@ class AttentionLevels01Observer(ObserverBase):
         return
 
     # -----------------------------------------------------------------------
-    # Note: in this experiment, tokens 0 and 1 carry signal; all others are random.
-    # We use token 2 as a representative of noise.
+    # Note: in this experiment, tokens 1 and 2 carry signal; all others are random.
+    # We use token 3 as a representative of noise.
 
     def observe(self, ctx):
 

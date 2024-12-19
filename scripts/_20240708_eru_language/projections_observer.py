@@ -1,5 +1,3 @@
-from typing import Iterable, Tuple
-
 import numpy as np
 
 from sklearn.manifold import TSNE
@@ -22,8 +20,8 @@ class ProjectionsObserver(ObserverBase):
         return
 
     # -----------------------------------------------------------------------
-    # Note: in this experiment, tokens 0 and 1 carry signal; all others are random.
-    # We use token 2 as a representative of noise.
+    # Note: in this experiment, tokens 1 and 2 carry signal; all others are random.
+    # We use token 3 as a representative of noise.
 
     def observe(self, ctx):
 
@@ -86,7 +84,7 @@ class ProjectionsObserver(ObserverBase):
                 "i-batch": ctx["batch"]["i-batch"],
                 "i-sample": i_sample,
                 "x": x_values,
-                "points": observations_cur
+                "projections": observations_cur
             })
 
         return
@@ -100,7 +98,7 @@ class ProjectionsObserver(ObserverBase):
         tuples_flat = [
             (legend, point) # tuple layout enforcement and flattening
             for observations_cur in self.observations
-            for legend, point in observations_cur["points"]
+            for legend, point in observations_cur["projections"]
         ]
 
         colors_by_legend = {}

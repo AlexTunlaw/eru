@@ -1,7 +1,7 @@
 from typing import Tuple, Iterable
 import time
 
-from ml3 import CsvFile, CsvSchema, CsvLine, ProgressTrace, AllRandoms
+from ml3 import CsvFile, CsvSchema, CsvLine, ProgressTrace, AllRandoms, SimpleObject
 
 from fero_lib import OaiBuilder
 
@@ -88,7 +88,7 @@ class EruBuilderE2(OaiBuilder):
             results = EruSelfAttentionBinaryClassificationWorkflow.train(
                 example_stream=example_stream,
                 config=params["training-config"],
-                observe_fn=lambda ctx: observer.observe(ctx)
+                observe_fn=lambda ctx: (observer.observe(ctx) if observer is not None else None)
             )
 
             loss_logs.append(results["loss-log"])

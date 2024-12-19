@@ -1,8 +1,9 @@
 from .eru_site import EruSite
 from .eru_builder_e1 import EruBuilderE1
 from .eru_builder_e2 import EruBuilderE2
-from .attention_levels_observers import AttentionLevels01Observer
-from .projections_observers import ProjectionsObserver
+from .attention_levels_observer import AttentionLevels01Observer
+from .projections_observer import ProjectionsObserver
+from .recorder_observer import RecorderObserver
 
 # ---------------------------------------------------------------------------
 
@@ -359,11 +360,11 @@ def run_scripts_e2():
             "observation-mode": "layers 0,1 - 01, 10, 02", # "layers 0,1 - 01, 10, 02", "layer 0 - EOS to 0, 1, 2"
         },
         #
-        # individual learning rates 11/16/2024
+        # individual learning rates, 11/16/2024
         #
         # Uniform, 0.01: converges in 14.2 steps, of 15 runs
         #
-        { "enabled": True,
+        { "enabled": False,
             "step-method": EruBuilderE2.train_e2_self_attention_binary_classification,
             "outputs": {},
             "run-count": 5,
@@ -393,13 +394,53 @@ def run_scripts_e2():
                     }
                 }
             },
-            "make-observer-fn": lambda: AttentionLevels01Observer(
-                # observation_target="layer 0 - EOS to 1, 2",
-                observation_target="layers 0,1 - 12, 21, EOS",
-            ),
+        },
+        #
+        # observation of attention levels and key,value, query, 11/26/2024
+        #
+        # Uniform, 0.01: converges in 14.2 steps, of 15 runs
+        #
+        { "enabled": True,
+            "step-method": EruBuilderE2.train_e2_self_attention_binary_classification,
+            "outputs": {},
+            "run-count": 5,
+            **language_params,
+            "training-config": {
+                "early-stop": "FeroWindowBasedLossLevel() <= 0.15", # note
+                "batch-size": 100,
+                "batch-count": 200,
+                "max-seq-len": utterance_len,
+                "log-every-n": 10,
+                "model": {
+                    "embedding-dim": 16,
+                    "attention-dim": 14,
+                    "c-heads": 1, #NOTE 1: easy to see convergence patterns; 3: fast, robust convergence
+                    # "c-layers": 1,
+                    "c-layers": 2,
+                },
+                "optimizer": {
+                    "adam": {
+                        "lr": lambda model: [
+                            {"params": model.embedding.parameters(), "lr": 0.01},
+                            {"params": model.layers[0].parameters(), "lr": 0.01},
+                            {"params": model.layers[1].parameters(), "lr": 0.01 / 10},
+                            {"params": model.fc.parameters(), "lr": 0.01 / 100},
+                        ],
+                        "wd": 0.0, # 0.01,
+                    }
+                }
+            },
+            # "make-observer-fn": lambda: AttentionLevels01Observer(
+            #     # observation_target="layer 0 - EOS to 1, 2",
+            #     observation_target="layers 0,1 - 12, 21, EOS",
+            # ),
             # "make-observer-fn": lambda: ProjectionsObserver(observed_layers=["self-attention 0"]),
             # "make-observer-fn": lambda: ProjectionsObserver(observed_layers=["self-attention 1"]),
-            # Note: I am not seeing keys and queries meet after tsne; does this mean that only some part of representation is participating in cosine similarity?
+            # Note: experiment with t-SNE-ing key,queries points is not going to work to show dynamics of convergence.
+            # Cosine similarity key, value is dominated by a small number of components; and projection should really be
+            # only projecting those. Because it's not doing that, we see key values not meet up.
+            # (There is though an interesting trajectory project pattern similarity, but it's not clear what it shows)
+            "make-observer-fn": lambda: RecorderObserver(),
         },
     ])
 
