@@ -403,10 +403,10 @@ def run_scripts_e2():
         { "enabled": True,
             "step-method": EruBuilderE2.train_e2_self_attention_binary_classification,
             "outputs": {},
-            "run-count": 5,
+            "run-count": 10,
             **language_params,
             "training-config": {
-                "early-stop": "FeroWindowBasedLossLevel() <= 0.15", # note
+                "early-stop": "FeroWindowBasedLossLevel() <= 0.20", # note
                 "batch-size": 100,
                 "batch-count": 200,
                 "max-seq-len": utterance_len,

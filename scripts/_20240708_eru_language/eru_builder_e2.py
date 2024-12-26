@@ -103,10 +103,11 @@ class EruBuilderE2(OaiBuilder):
         loss_logs_accepted = [
             log
             for log in loss_logs
-            if sum(log[-last_k : ]) / last_k < 1.0
+            if sum(log[-last_k : ]) / last_k < 1.0 # (if converged; a diverged log will have large values in the last few entries)
         ]
-        steps_to_convergence_average = \
-            sum(len(log) for log in loss_logs_accepted) / len(loss_logs_accepted)
+        loss_logs_lens = [len(log) for log in loss_logs]
+        loss_logs_lens_without_outliers = loss_logs_lens[1:-1]
+        steps_to_convergence_average = sum(loss_logs_lens_without_outliers) / len(loss_logs_lens_without_outliers)
         print(f"steps to convergence, average: {steps_to_convergence_average}")
 
         # loss logs

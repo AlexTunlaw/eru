@@ -18,7 +18,8 @@ class EruSelfAttentionBinaryClassificationModel(EruSelfAttentionModel):
         attention_dim,
         c_heads,
         c_layers=1,
-        dropout=None
+        dropout=None,
+        attention_v_dim=None
     ):
 
         super().__init__(
@@ -30,8 +31,11 @@ class EruSelfAttentionBinaryClassificationModel(EruSelfAttentionModel):
             dropout=dropout
         )
 
+        if attention_v_dim is None:
+            attention_v_dim = embedding_dim
+
         output_dim = 1
-        self.fc = torch.nn.Linear(c_heads * embedding_dim, output_dim)
+        self.fc = torch.nn.Linear(c_heads * attention_v_dim, output_dim)
         self.sigmoid = torch.nn.Sigmoid()
         return
 
@@ -48,7 +52,7 @@ class EruSelfAttentionBinaryClassificationModel(EruSelfAttentionModel):
         # -> batch_size, c_heads, embedding_dim
         r_all_heads_eou = r_all_heads[:, :, -1, :]
 
-        #..todo
+        # -> batch_size
         logits = self.fc(
             r_all_heads_eou.reshape(batch_size, -1)
         ).reshape(batch_size)

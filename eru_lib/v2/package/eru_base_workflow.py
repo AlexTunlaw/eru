@@ -113,6 +113,15 @@ class EruBaseWorkflow:
             loss_value = loss.item() / y_predicted.shape[0] * 100 # note: this loss normalization is purely to account for batches of various sizes
 
             loss.backward()
+
+            # torch.nn.utils.clip_grad_norm_(model.layers[0].W_key, model.layers[1].W_key.grad.norm())
+            # torch.nn.utils.clip_grad_norm_(model.layers[0].W_query, model.layers[1].W_query.grad.norm())
+            # print(f"norms of grad of L0 key, query: {model.layers[0].W_key.grad.norm().item():.3f}, {model.layers[0].W_query.grad.norm().item():.3f}")
+            # print(f"                 L1 key, query: {model.layers[1].W_key.grad.norm().item():.3f}, {model.layers[1].W_query.grad.norm().item():.3f}")
+            # torch.nn.utils.clip_grad_norm_(model.layers[1].W_value, model.layers[0].W_value.grad.norm())
+            # print(f"norms of grad of L0 value: {model.layers[0].W_value.grad.norm().item():.3f}")
+            # print(f"                 L1 value: {model.layers[1].W_value.grad.norm().item():.3f}")
+
             optimizer.step()
 
             # misc
