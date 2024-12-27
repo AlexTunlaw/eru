@@ -16,4 +16,6 @@ class EruSelfAttentionBinaryClassificationWorkflow(EruBaseBinaryClassificationWo
             attention_dim=config["model"]["attention-dim"],
             c_heads=config["model"]["c-heads"],
             c_layers=config["model"]["c-layers"],
+            sharpening_mode=config["model"].get("sharpening-mode", "softmax"),
+            alignment_mode=config["model"].get("alignment-mode", "dot-product"),
         )

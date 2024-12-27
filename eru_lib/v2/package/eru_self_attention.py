@@ -3,6 +3,12 @@ import math
 import torch
 
 # ---------------------------------------------------------------------------
+
+def custom_base_softmax(x, base=2, dim=-1):
+    x_exp = torch.pow(base, x)
+    return x_exp / torch.sum(x_exp, dim=dim, keepdim=True)
+
+# ---------------------------------------------------------------------------
 # based on:
 # https://sebastianraschka.com/blog/2023/self-attention-from-scratch.html
 # https://github.com/sooftware/attentions/blob/master/attentions.py
@@ -14,8 +20,10 @@ class SelfAttention(torch.nn.Module):
 
     # -----------------------------------------------------------------------
 
-    def __init__(self, input_dim, attention_dim, output_dim, c_heads, desc:str=None, mode="softmax"):
+    def __init__(self, input_dim, attention_dim, output_dim, c_heads, desc:str=None, sharpening_mode="softmax", alignment_mode="dot-product"):
+
         super().__init__()
+
         self.layer_norm = torch.nn.LayerNorm((input_dim,))
         self.W_key = torch.nn.Parameter(torch.rand(c_heads, attention_dim, input_dim))
         self.W_query = torch.nn.Parameter(torch.rand(c_heads, attention_dim, input_dim))
@@ -23,32 +31,48 @@ class SelfAttention(torch.nn.Module):
         self.scale = math.sqrt(input_dim)
         self.desc = desc
 
-        self.mode = mode
-        self.overtaking_sigmoid = torch.nn.Sigmoid()
+        self.sharpening_mode = sharpening_mode
+        self.alignment_mode = alignment_mode
+        self.overtaking_sigmoid = torch.nn.Sigmoid() if self.sharpening_mode != "softmax" else None
         return
 
     # -----------------------------------------------------------------------
 
-    def forward(self, input, observe_fn=None):
+    def forward(self, input, ctx=None, observe_fn=None):
 
         # batch, num-heads, seq, input-d
         input_normalized = self.layer_norm(input)
 
         # W: num-heads, attention-d, input-d
         # query, keys, values:
-        # batch, num-heads, seq, attention-d
+        # -> batch, num-heads, seq, attention-d
         queries = torch.matmul(self.W_query, input_normalized.permute(0, 1, 3, 2)).permute(0, 1, 3, 2)
         keys = torch.matmul(self.W_key, input_normalized.permute(0, 1, 3, 2)).permute(0, 1, 3, 2)
         values = torch.matmul(self.W_value, input_normalized.permute(0, 1, 3, 2)).permute(0, 1, 3, 2)
 
-        # batch, num-heads, seq, seq
-        attention_scores = torch.matmul(queries, keys.permute(0, 1, 3, 2)) / self.scale
+        # -> batch, num-heads, seq, seq
+        match self.alignment_mode:
+            case "dot-product": # classic/textbook
+                attention_scores = torch.matmul(queries, keys.permute(0, 1, 3, 2)) / self.scale
+            case "mse": # novel
+                attention_scores = torch.cdist(keys, queries) / self.scale
 
-        # batch, num-heads, seq, seq
-        match self.mode:
+        # -> batch, num-heads, seq, seq
+        match self.sharpening_mode:
 
             case "softmax": # classic/textbook
                 attention_weights = torch.softmax(attention_scores, dim=-1)
+
+            case "softmax-temperature-loss-guided": # novel
+                previous_loss = ctx["previous-loss"]
+                min_temperature, max_temperature = 1.1, torch.e
+                previous_loss_effective = previous_loss if previous_loss is not None else 1.0
+                soft_temperature_selector = previous_loss_effective
+                temperature_effective = (
+                    min_temperature * soft_temperature_selector +         # start with close to min temperature (when loss is high)
+                    max_temperature * (1.0 - soft_temperature_selector)   # finish with max temperature (when loss is low)
+                )
+                attention_weights = custom_base_softmax(attention_scores, base=temperature_effective, dim=-1)
 
             case "sigmoid": # not robust for simple eru languages (e.g. bigram-based binary classification)
                 sigmoid_domain = 5
@@ -72,7 +96,7 @@ class SelfAttention(torch.nn.Module):
                     softmax_selector * torch.softmax(attention_scores_normalized, dim=-1) + \
                     sigmoid_selector * self.overtaking_sigmoid(attention_scores_normalized * 2 * sigmoid_domain - sigmoid_domain)
 
-        # batch, num-heads, seq, output-d
+        # -> batch, num-heads, seq, output-d
         output_valued = torch.matmul(attention_weights, values)
 
         if observe_fn is not None:

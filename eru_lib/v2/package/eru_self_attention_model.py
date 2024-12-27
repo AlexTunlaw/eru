@@ -15,7 +15,9 @@ class EruSelfAttentionModel(torch.nn.Module):
         attention_dim,
         c_heads,
         c_layers=1,
-        dropout=None
+        dropout=None,
+        sharpening_mode="softmax",
+        alignment_mode="dot-product",
     ):
         super().__init__()
 
@@ -33,7 +35,9 @@ class EruSelfAttentionModel(torch.nn.Module):
                 attention_dim=attention_dim,
                 output_dim=attention_v_dim,
                 c_heads=c_heads,
-                desc="0"
+                desc=str(0),
+                sharpening_mode=sharpening_mode,
+                alignment_mode=alignment_mode,
             )
         ] + [
             SelfAttention(
@@ -41,16 +45,18 @@ class EruSelfAttentionModel(torch.nn.Module):
                 attention_dim=attention_dim,
                 output_dim=attention_v_dim,
                 c_heads=c_heads,
-                desc=str(i_layer + 1)
+                desc=str(i_layer),
+                sharpening_mode=sharpening_mode,
+                alignment_mode=alignment_mode,
             )
-            for i_layer in range(c_layers - 1)
+            for i_layer in range(1, c_layers)
         ])
 
         return
 
     # -----------------------------------------------------------------------
 
-    def forward(self, x, observe_fn=None):
+    def forward(self, x, ctx=None, observe_fn=None):
 
         # batch, seq, embedding-d
         embedded = self.embedding(x)
@@ -63,7 +69,7 @@ class EruSelfAttentionModel(torch.nn.Module):
         layer_output_cur = embedded_repeated
         for layer in self.layers:
             # batch, num-heads, seq, attention-v-d
-            layer_output_cur = layer.forward(layer_output_cur, observe_fn)
+            layer_output_cur = layer.forward(layer_output_cur, ctx, observe_fn)
 
         output_valued = layer_output_cur
         return output_valued

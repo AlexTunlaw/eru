@@ -65,7 +65,10 @@ class RecorderObserver(ObserverBase):
             attentions_observations_cur = []
             attentions_observation_plan = [
                 ((1, i1), (2, i2), "self-attention 0"),
+                ((1, i1), ("median", "median"), "self-attention 0"),
                 ((2, i2), (1, i1), "self-attention 0"),
+                ((2, i2), ("median", "median"), "self-attention 0"),
+                (("EOS", iEOS), ("median", "median"), "self-attention 1"),
                 (("EOS", iEOS), (1, i1), "self-attention 0"),
                 (("EOS", iEOS), (2, i2), "self-attention 0"),
 
@@ -80,13 +83,13 @@ class RecorderObserver(ObserverBase):
                     attentions_observations_cur.append((
                         (
                             "|".join([self_attention_layer, str(i_head), str(token_a), str(token_b)]),
-                            sorted(ctx[self_attention_layer]["attention-scores"][i_sample][i_head][token_a_i].tolist(), reverse=True) \
-                                [ctx[self_attention_layer]["attention-scores"].shape[3] // 2],
+                            sorted(ctx[self_attention_layer]["attention-weights"][i_sample][i_head][token_a_i].tolist(), reverse=True) \
+                                [ctx[self_attention_layer]["attention-weights"].shape[3] // 2],
                         )
                         if token_b == "median"
                         else (
                             "|".join([self_attention_layer, str(i_head), str(token_a), str(token_b)]),
-                            ctx[self_attention_layer]["attention-scores"][i_sample][i_head][token_a_i][token_b_i].item(),
+                            ctx[self_attention_layer]["attention-weights"][i_sample][i_head][token_a_i][token_b_i].item(),
                         )
                     ))
 
@@ -109,22 +112,22 @@ class RecorderObserver(ObserverBase):
             print(f"observation: {i_observation}")
 
             attentions = self.observations[i_observation]["attentions"]
-            for t in attentions[:2] + attentions[-3:]:
+            for t in attentions[:4] + attentions[-3:]:
                 print(t)
 
-            print(self.observations[i_observation]["projections"][-1][0])
+            # print(self.observations[i_observation]["projections"][-1][0])
             level_1_eos_query = self.observations[i_observation]["projections"][-1][1]
-            print(self.observations[i_observation]["projections"][6][0])
-            level_1_eos_key_1 = self.observations[i_observation]["projections"][6][1]
-            print(self.observations[i_observation]["projections"][7][0])
-            level_1_eos_key_2 = self.observations[i_observation]["projections"][7][1]
+            # print(self.observations[i_observation]["projections"][6][0])
+            level_1_eos_key_1 = self.observations[i_observation]["projections"][8][1]
+            # print(self.observations[i_observation]["projections"][7][0])
+            level_1_eos_key_2 = self.observations[i_observation]["projections"][9][1]
 
             sim = torch.nn.CosineSimilarity(dim=0)
             c_prefix = 8
             print(f"level 1 eos:1 {sim(torch.tensor(level_1_eos_query), torch.tensor(level_1_eos_key_1)):.2f}")
-            print(" ".join(f"{v1:+.1f}|{v2:+.1f}" for v1, v2 in zip(level_1_eos_query[:c_prefix], level_1_eos_key_1[:c_prefix])))
+            # print(" ".join(f"{v1:+.1f}|{v2:+.1f}" for v1, v2 in zip(level_1_eos_query[:c_prefix], level_1_eos_key_1[:c_prefix])))
             print(f"level 1 eos:2 {sim(torch.tensor(level_1_eos_query), torch.tensor(level_1_eos_key_2)):.2f}")
-            print(" ".join(f"{v1:+.1f}|{v2:+.1f}" for v1, v2 in zip(level_1_eos_query[:c_prefix], level_1_eos_key_2[:c_prefix])))
+            # print(" ".join(f"{v1:+.1f}|{v2:+.1f}" for v1, v2 in zip(level_1_eos_query[:c_prefix], level_1_eos_key_2[:c_prefix])))
 
             return
 

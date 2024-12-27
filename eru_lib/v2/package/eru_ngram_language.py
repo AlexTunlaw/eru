@@ -33,6 +33,7 @@ class EruNgramLanguage:
             vocab_ps=config["vocab-ps"],
             classes=config["classes"],
             utterance_len=config["utterance-len"],
+            generate_with_no_duplicates=config.get("generate-with-no-duplicates", False),
         )
 
     # -----------------------------------------------------------------------
@@ -42,6 +43,7 @@ class EruNgramLanguage:
         vocab_ps: List[float],
         classes: Dict[Token, List[Tuple[float, Token]]],
         utterance_len: int,
+        generate_with_no_duplicates: bool,
     ):
         self.vocab = vocab
         assert vocab_ps[0] == 0.0
@@ -60,6 +62,7 @@ class EruNgramLanguage:
         self.ps = [cls.p for cls in self.classes]
         assert sum(self.ps) == 1.0
         self.utterance_len = utterance_len
+        self.generate_with_no_duplicates = generate_with_no_duplicates
         return
 
     # -----------------------------------------------------------------------
@@ -90,6 +93,11 @@ class EruNgramLanguage:
                 for _k in range(self.utterance_len - 1)
             ] + [EOU]
             assert len(utterance) == self.utterance_len
+            if self.generate_with_no_duplicates and cls != self.star_cls:
+                for k in range(self.utterance_len - 1):
+                    if utterance[k] in cls.ngram:
+                        utterance[k] = np.random.choice([v for v in self.vocab if v not in cls.ngram]) # (note: replacements don't follow the vocab distribution)
+                    continue
 
             # class
             if cls != self.star_cls:

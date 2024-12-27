@@ -12,8 +12,9 @@ def run_scripts():
     {
         "e1": run_scripts_e1,
         "e2": run_scripts_e2,
+        "e2b": run_scripts_e2b,
     }[
-        "e2"
+        "e2b"
     ]       ()
 
     return
@@ -400,7 +401,7 @@ def run_scripts_e2():
         #
         # Uniform, 0.01: converges in 14.2 steps, of 15 runs
         #
-        { "enabled": True,
+        { "enabled": False,
             "step-method": EruBuilderE2.train_e2_self_attention_binary_classification,
             "outputs": {},
             "run-count": 10,
@@ -423,8 +424,8 @@ def run_scripts_e2():
                         "lr": lambda model: [
                             {"params": model.embedding.parameters(), "lr": 0.01},
                             {"params": model.layers[0].parameters(), "lr": 0.01},
-                            {"params": model.layers[1].parameters(), "lr": 0.01 / 10},
-                            {"params": model.fc.parameters(), "lr": 0.01 / 100},
+                            {"params": model.layers[1].parameters(), "lr": 0.01}, # / 10},
+                            {"params": model.fc.parameters(), "lr": 0.01 /10}, #  / 100},
                         ],
                         "wd": 0.0, # 0.01,
                     }
@@ -445,3 +446,69 @@ def run_scripts_e2():
     ])
 
     print("DONE")
+
+# ---------------------------------------------------------------------------
+# same as e2, but fixed so that tokens 1 and 2 only show up once
+
+def run_scripts_e2b():
+
+    site = EruSite(data_dir="_data/_20240930_eru_language")
+
+    builder = EruBuilderE2(site, name_key="20240930")
+
+    utterance_len = 20
+    language_params = {
+        "language": {
+            "vocab-size": 100, # 0 is EOU (End Of Utterance)
+            "vocab-ps": [0.0, 0.2, 0.2] + ([0.6 / 97] * 97),
+            "classes": {
+                0: (0.5, "*"),
+                1: (0.5, [1, 2])
+            },
+            "generate-with-no-duplicates": True, # this eliminates duplication of tokens 1, 2
+            "utterance-len": utterance_len,
+        }
+    }
+
+    builder.run_steps([
+        #
+        # observation of attention levels and key,value, query, 11/26/2024
+        #
+        # Uniform, 0.01: converges in 14.2 steps, of 15 runs
+        #
+        { "enabled": True,
+            "step-method": EruBuilderE2.train_e2_self_attention_binary_classification,
+            "outputs": {},
+            "run-count": 10,
+            **language_params,
+            "training-config": {
+                "early-stop": "FeroWindowBasedLossLevel() <= 0.20", # note
+                "batch-size": 100,
+                "batch-count": 200,
+                "max-seq-len": utterance_len,
+                "log-every-n": 10,
+                "model": {
+                    "embedding-dim": 16,
+                    "attention-dim": 14,
+                    "c-heads": 1, #NOTE 1: easy to see convergence patterns; 3: fast, robust convergence
+                    # "c-layers": 1,
+                    "c-layers": 2,
+                    # "sharpening-mode": "softmax", # Steps to converge: 52.24
+                    "sharpening-mode": "softmax-temperature-loss-guided", # Steps to converge: 41.82 (max=e); (max=2*e - no go);  47.75 (min=1.01)
+                    "alignment-mode": "dot-product", # NOTE mse is novel (use much higher base lr, for example 0.05); dot-product is textbook
+                },
+                "optimizer": {
+                    "adam": {
+                        "lr": lambda model: [
+                            {"params": model.embedding.parameters(), "lr": 0.01},
+                            {"params": model.layers[0].parameters(), "lr": 0.01},
+                            {"params": model.layers[1].parameters(), "lr": 0.01 / 10}, # / 10},
+                            {"params": model.fc.parameters(), "lr": 0.01 / 100}, #  / 100},
+                        ],
+                        "wd": 0.0, # 0.01,
+                    }
+                }
+            },
+            "make-observer-fn": lambda: RecorderObserver(),
+        },
+    ])

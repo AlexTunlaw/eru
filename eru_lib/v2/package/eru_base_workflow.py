@@ -80,6 +80,7 @@ class EruBaseWorkflow:
         loss_level_detector, loss_threshold = cls.get_early_stop(config)
 
         loss_log = []
+        loss_value = None
         #
         # training loop 
         #
@@ -93,10 +94,13 @@ class EruBaseWorkflow:
             x = batch[:-1]
             y_labels = batch[-1]
 
-            ctx_cumulative = {}
+            ctx_cumulative = {
+                "previous-loss": loss_value # (don't use loss itself to not create computation graph dependency on the previous iteration)
+            }
 
             y_predicted = model.forward(
                 *x,
+                ctx=ctx_cumulative,
                 observe_fn=lambda ctx: accumulative_observe(ctx_cumulative=ctx_cumulative, ctx=ctx)
             )
 

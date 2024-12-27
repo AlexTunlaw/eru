@@ -19,7 +19,9 @@ class EruSelfAttentionBinaryClassificationModel(EruSelfAttentionModel):
         c_heads,
         c_layers=1,
         dropout=None,
-        attention_v_dim=None
+        attention_v_dim=None,
+        sharpening_mode="softmax",
+        alignment_mode="dot-product",
     ):
 
         super().__init__(
@@ -28,7 +30,9 @@ class EruSelfAttentionBinaryClassificationModel(EruSelfAttentionModel):
             attention_dim=attention_dim,
             c_heads=c_heads,
             c_layers=c_layers,
-            dropout=dropout
+            dropout=dropout,
+            sharpening_mode=sharpening_mode,
+            alignment_mode=alignment_mode,
         )
 
         if attention_v_dim is None:
@@ -41,12 +45,12 @@ class EruSelfAttentionBinaryClassificationModel(EruSelfAttentionModel):
 
     # -----------------------------------------------------------------------
 
-    def forward(self, x, observe_fn=None):
+    def forward(self, x, ctx=None, observe_fn=None):
 
         batch_size, seq_len = x.shape
 
         # -> batch_size, c_heads, seq_len, embedding_dim
-        r_all_heads = super().forward(x=x, observe_fn=observe_fn)
+        r_all_heads = super().forward(x=x, ctx=ctx, observe_fn=observe_fn)
 
         # We use EOU (last token) for seq meaning
         # -> batch_size, c_heads, embedding_dim
