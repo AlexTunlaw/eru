@@ -7,11 +7,11 @@ mps_torch_device = torch.device("mps") if torch.backends.mps.is_available() else
 
 from ml3 import ConfigChecker, SimpleObject
 
-from .fero_siamese_learner import FeroSiameseLearner
-from .fero_contrastive_loss import FeroContrastiveLoss
-from .fero_window_based_loss_level import FeroWindowBasedLossLevel
+from .fulcro_siamese_learner import FulcroSiameseLearner
+from .fulcro_contrastive_loss import FulcroContrastiveLoss
+from .fulcro_window_based_loss_level import FulcroWindowBasedLossLevel
 
-class FeroSiameseContrastiveWorkflow:
+class FulcroSiameseContrastiveWorkflow:
 
     # -----------------------------------------------------------------------
 
@@ -74,7 +74,7 @@ class FeroSiameseContrastiveWorkflow:
             use_mps_device = False
         torch_device = mps_torch_device if use_mps_device else torch.device("cpu")
 
-        model = FeroSiameseLearner(
+        model = FulcroSiameseLearner(
             input_dim=cfg["siamese"]["input-dim"],
             contrastive_head_dim=cfg["siamese"]["contrastive-head-dim"],
             dtype=cfg["siamese"].get("dtype", torch.float32),
@@ -87,7 +87,7 @@ class FeroSiameseContrastiveWorkflow:
         )
 
         sim_fn = torch.nn.CosineSimilarity(dim=1)
-        loss_fn = FeroContrastiveLoss()
+        loss_fn = FulcroContrastiveLoss()
 
         batch_size=cfg["batch"]["size"]
 

@@ -1,10 +1,10 @@
-from .package.fero_llm_tokenizer import FeroLlmTokenizer
-from .package.fero_llm_featurizer import FeroLlmFeaturizer, FeroLlmCachedItem
-from .package.fero_oai_fine_tuning_helpers import FeroOaiFineTuningHelpers
-from .package.fero_llm_task_assistant import FeroLlmTaskAssistant
-from .package.fero_llm_client import (
-    FeroAsyncCachingOaiClient,
-    FeroCachingOaiClient,
-    FeroAsyncCachingAnthropicClient,
-    FeroAsyncCachingLlmClients
+from .package.fulcro_llm_tokenizer import FulcroLlmTokenizer
+from .package.fulcro_llm_featurizer import FulcroLlmFeaturizer, FulcroLlmCachedItem
+from .package.fulcro_oai_fine_tuning_helpers import FulcroOaiFineTuningHelpers
+from .package.fulcro_llm_task_assistant import FulcroLlmTaskAssistant
+from .package.fulcro_llm_client import (
+    FulcroAsyncCachingOaiClient,
+    FulcroCachingOaiClient,
+    FulcroAsyncCachingAnthropicClient,
+    FulcroAsyncCachingLlmClients
 )

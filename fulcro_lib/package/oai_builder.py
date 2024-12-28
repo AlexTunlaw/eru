@@ -14,11 +14,11 @@ from openai import RateLimitError, APITimeoutError
 
 from ml3 import CsvLine, CsvSchema, CsvFile
 
-from fero_llm import (
-    FeroCachingOaiClient,
-    FeroAsyncCachingOaiClient,
-    FeroAsyncCachingLlmClients,
-    FeroOaiFineTuningHelpers
+from fulcro_llm import (
+    FulcroCachingOaiClient,
+    FulcroAsyncCachingOaiClient,
+    FulcroAsyncCachingLlmClients,
+    FulcroOaiFineTuningHelpers
 )
 
 from .basic_builder import BasicBuilder
@@ -49,34 +49,34 @@ class OaiBuilder(BasicBuilder):
         expected_output_fn = params["expected-output-fn"]
 
         cooked_examples = [
-            FeroOaiFineTuningHelpers.SingleTurnFineTuningExample(
+            FulcroOaiFineTuningHelpers.SingleTurnFineTuningExample(
                 input=prompt_template_fn(input_line),
                 expected_output=expected_output_fn(input_line)
             ).get_serialized_form(system_prompt=system_prompt_fn(input_line))
             for input_line in input_lines
         ]
 
-        FeroOaiFineTuningHelpers.save_fine_tuning_file(output_spec.file_name, cooked_examples)
+        FulcroOaiFineTuningHelpers.save_fine_tuning_file(output_spec.file_name, cooked_examples)
         return
 
     # -----------------------------------------------------------------------
 
     def upload_fine_tuning_data_to_oai(self, params):
 
-        fero_llm_client = FeroCachingOaiClient(
+        provider_client = FulcroCachingOaiClient(
             client_type=params["openai"],
             local_cache_dir=self.site.oai_completions_cache_dir
         )
 
         input_spec = self.get_file_spec(params["input"])
-        FeroOaiFineTuningHelpers.upload_fine_tuning_data_to_oai(input_spec.file_name, fero_llm_client.client)
+        FulcroOaiFineTuningHelpers.upload_fine_tuning_data_to_oai(input_spec.file_name, provider_client.client)
         return
 
     # -----------------------------------------------------------------------
 
     def start_fine_tuning_job(self, params):
 
-        fero_llm_client = FeroCachingOaiClient(
+        provider_client = FulcroCachingOaiClient(
             client_type=params["openai"],
             local_cache_dir=self.site.oai_completions_cache_dir
         )
@@ -92,18 +92,18 @@ class OaiBuilder(BasicBuilder):
 
         batch_size = params.get("batch-size", "auto")
 
-        FeroOaiFineTuningHelpers.start_fine_tuning_job(
+        FulcroOaiFineTuningHelpers.start_fine_tuning_job(
             uploaded_train_file_id=uploaded_train_file_id,
             base_model=params["base-model"],
             n_epochs=params.get("n-epochs"),
-            openai_client=fero_llm_client.client,
+            openai_client=provider_client.client,
             batch_size=batch_size,
             uploaded_validate_file_id=uploaded_validate_file_id
         )
 
-        FeroOaiFineTuningHelpers.print_status_of_fine_tuning_job(
+        FulcroOaiFineTuningHelpers.print_status_of_fine_tuning_job(
             uploaded_file_id=uploaded_train_file_id,
-            openai_client=fero_llm_client.client
+            openai_client=provider_client.client
         )
         return
 
@@ -111,7 +111,7 @@ class OaiBuilder(BasicBuilder):
 
     def print_status_of_fine_tuning_job(self, params):
 
-        FeroOaiFineTuningHelpers.print_status_of_fine_tuning_job(uploaded_file_id=params["input"])
+        FulcroOaiFineTuningHelpers.print_status_of_fine_tuning_job(uploaded_file_id=params["input"])
         return
 
     # -----------------------------------------------------------------------
@@ -257,7 +257,7 @@ class OaiBuilder(BasicBuilder):
         max_tokens,
         force_key,
         timeout,
-        fero_llm_client
+        provider_client
     ):
 
 
@@ -274,7 +274,7 @@ class OaiBuilder(BasicBuilder):
         for k in range(create_api_calls):
             while True:
                 try:
-                    completions += await fero_llm_client.create_completions(
+                    completions += await provider_client.create_completions(
                         model=model,
                         messages=messages,
                         temperature=repeat_temperatures[k],
@@ -426,8 +426,8 @@ class OaiBuilder(BasicBuilder):
 
         retries_of_main_loop = [5, 30, 60, 120]
 
-        fero_llm_client = (
-            FeroAsyncCachingLlmClients.make_client(
+        provider_client = (
+            FulcroAsyncCachingLlmClients.make_client(
                 client_type=params["openai"],
                 local_cache_dir=self.site.oai_completions_cache_dir
             )
@@ -461,7 +461,7 @@ class OaiBuilder(BasicBuilder):
                 max_tokens=max_tokens,
                 force_key=f"{i_line}|{force_key if force_key is not None else '-'}",
                 timeout=completions_timeout,
-                fero_llm_client=fero_llm_client
+                provider_client=provider_client
             )
             return repeat_merge_with.join([
                 (text if text is not None else "__NONE__")

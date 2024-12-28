@@ -13,7 +13,7 @@ import torch
 
 # ---------------------------------------------------------------------------
 
-class FeroLlmCachedItem:
+class FulcroLlmCachedItem:
 
     # -----------------------------------------------------------------------
 
@@ -75,17 +75,17 @@ class FeroLlmCachedItem:
 # Using v2
 # Max input tokens: 8191
 
-class FeroLlmFeaturizer:
+class FulcroLlmFeaturizer:
     
     # -----------------------------------------------------------------------
 
     def __init__(self,
-        fero_llm_client,
+        provider_client,
         model_name="text-embedding-ada-002", # 3,000 pages for $1
         embedding_dim=1536,
         local_cache_dir=None
     ):
-        self.fero_llm_client = fero_llm_client
+        self.provider_client = provider_client
 
         self.model_name = model_name
 
@@ -104,7 +104,7 @@ class FeroLlmFeaturizer:
 
     @property
     def is_async(self):
-        return self.fero_llm_client.is_async
+        return self.provider_client.is_async
 
     # -----------------------------------------------------------------------
 
@@ -114,15 +114,15 @@ class FeroLlmFeaturizer:
 
     # -----------------------------------------------------------------------
 
-    def featurize_text(self, text, force_refresh=False) -> FeroLlmCachedItem:
+    def featurize_text(self, text, force_refresh=False) -> FulcroLlmCachedItem:
 
         return self.featurize_texts([text], force_refresh=force_refresh)[0]
 
     # -----------------------------------------------------------------------
 
-    def featurize_texts(self, texts, force_refresh=False) -> List[FeroLlmCachedItem]:
+    def featurize_texts(self, texts, force_refresh=False) -> List[FulcroLlmCachedItem]:
 
-        results = [FeroLlmCachedItem(text, model=self.model_name) for text in texts]
+        results = [FulcroLlmCachedItem(text, model=self.model_name) for text in texts]
         tasks = []
         for item in results:
             c_tokens = len(self.get_tokens(item.text))
@@ -140,7 +140,7 @@ class FeroLlmFeaturizer:
             timeouts = [2, 3, 5, 10, 30, 60, 300]
             for i_timeout, timeout in enumerate(timeouts):
                 try:
-                    embeddings = self.fero_llm_client.client.embeddings.create(
+                    embeddings = self.provider_client.client.embeddings.create(
                         input=[item.text for item in tasks],
                         model=self.model_name,
                         timeout=httpx.Timeout(timeout)
@@ -167,16 +167,16 @@ class FeroLlmFeaturizer:
 
     # -----------------------------------------------------------------------
 
-    async def featurize_text_async(self, text, force_refresh=False) -> FeroLlmCachedItem:
+    async def featurize_text_async(self, text, force_refresh=False) -> FulcroLlmCachedItem:
 
         return (await self.featurize_texts_async([text], force_refresh=force_refresh))[0]
 
     # -----------------------------------------------------------------------
     # TODO reduce duplication with the sync version of this
 
-    async def featurize_texts_async(self, texts, force_refresh=False) -> List[FeroLlmCachedItem]:
+    async def featurize_texts_async(self, texts, force_refresh=False) -> List[FulcroLlmCachedItem]:
 
-        results = [FeroLlmCachedItem(text, model=self.model_name) for text in texts]
+        results = [FulcroLlmCachedItem(text, model=self.model_name) for text in texts]
         tasks = []
         for item in results:
             c_tokens = len(self.get_tokens(item.text))
@@ -194,7 +194,7 @@ class FeroLlmFeaturizer:
             timeouts = [2, 3, 4, 5, 10]
             for i_timeout, timeout in enumerate(timeouts):
                 try:
-                    embeddings = await self.fero_llm_client.client.embeddings.create(
+                    embeddings = await self.provider_client.client.embeddings.create(
                         input=[item.text for item in tasks],
                         model=self.model_name,
                         timeout=httpx.Timeout(timeout)

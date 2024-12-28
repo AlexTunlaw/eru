@@ -62,7 +62,7 @@ def run_scripts_e1():
             "step-method": EruBuilderE1.train_e1_gru_binary_classification,
             "language": language_params,
             "training-config": {
-                "early-stop": "FeroWindowBasedLossLevel() <= 0.05", # note
+                "early-stop": "FulcroWindowBasedLossLevel() <= 0.05", # note
                 "batch-size": 100,
                 "batch-count": 250,
                 "max-seq-len": 12,
@@ -90,7 +90,7 @@ def run_scripts_e1():
             "run-count": 5,
             "language": language_params,
             "training-config": {
-                "early-stop": "FeroWindowBasedLossLevel() <= 0.05", # note
+                "early-stop": "FulcroWindowBasedLossLevel() <= 0.05", # note
                 "batch-size": 100,
                 "batch-count": 250,
                 "max-seq-len": 12,
@@ -130,7 +130,7 @@ def run_scripts_e1():
                 "modifiers-weight": 0.4
             },
             "training-config": {
-                "early-stop": "FeroWindowBasedLossLevel() <= 0.05", # note
+                "early-stop": "FulcroWindowBasedLossLevel() <= 0.05", # note
                 "batch-size": 100,
                 "batch-count": 250,
                 "max-seq-len": 12,
@@ -202,7 +202,7 @@ def run_scripts_e2():
             "step-method": EruBuilderE2.train_e2_gru_binary_classification,
             **language_params,
             "training-config": {
-                "early-stop": "FeroWindowBasedLossLevel() <= 0.05", # note
+                "early-stop": "FulcroWindowBasedLossLevel() <= 0.05", # note
                 "batch-size": 100,
                 "batch-count": 250,
                 "max-seq-len": utterance_len,
@@ -228,7 +228,7 @@ def run_scripts_e2():
             "run-count": 5,
             **language_params,
             "training-config": {
-                "early-stop": "FeroWindowBasedLossLevel() <= 0.10", # note
+                "early-stop": "FulcroWindowBasedLossLevel() <= 0.10", # note
                 "batch-size": 100,
                 "batch-count": 500,
                 "max-seq-len": utterance_len,
@@ -255,7 +255,7 @@ def run_scripts_e2():
             "run-count": 5,
             **language_params,
             "training-config": {
-                "early-stop": "FeroWindowBasedLossLevel() <= 0.10", # note
+                "early-stop": "FulcroWindowBasedLossLevel() <= 0.10", # note
                 "batch-size": 100,
                 "batch-count": 500,
                 "max-seq-len": utterance_len,
@@ -308,7 +308,7 @@ def run_scripts_e2():
             "run-count": 5,
             **language_params,
             "training-config": {
-                "early-stop": "FeroWindowBasedLossLevel() <= 0.15", # note
+                "early-stop": "FulcroWindowBasedLossLevel() <= 0.15", # note
                 "batch-size": 100,
                 "batch-count": 500,
                 "max-seq-len": utterance_len,
@@ -339,7 +339,7 @@ def run_scripts_e2():
             "run-count": 5,
             **language_params,
             "training-config": {
-                "early-stop": "FeroWindowBasedLossLevel() <= 0.15", # note
+                "early-stop": "FulcroWindowBasedLossLevel() <= 0.15", # note
                 "batch-size": 100,
                 "batch-count": 200,
                 "max-seq-len": utterance_len,
@@ -371,7 +371,7 @@ def run_scripts_e2():
             "run-count": 5,
             **language_params,
             "training-config": {
-                "early-stop": "FeroWindowBasedLossLevel() <= 0.25", # note
+                "early-stop": "FulcroWindowBasedLossLevel() <= 0.25", # note
                 "batch-size": 100,
                 "batch-count": 200,
                 "max-seq-len": utterance_len,
@@ -407,7 +407,7 @@ def run_scripts_e2():
             "run-count": 10,
             **language_params,
             "training-config": {
-                "early-stop": "FeroWindowBasedLossLevel() <= 0.20", # note
+                "early-stop": "FulcroWindowBasedLossLevel() <= 0.20", # note
                 "batch-size": 100,
                 "batch-count": 200,
                 "max-seq-len": utterance_len,
@@ -482,7 +482,7 @@ def run_scripts_e2b():
             "run-count": 10,
             **language_params,
             "training-config": {
-                "early-stop": "FeroWindowBasedLossLevel() <= 0.20", # note
+                "early-stop": "FulcroWindowBasedLossLevel() <= 0.20", # note
                 "batch-size": 100,
                 "batch-count": 200,
                 "max-seq-len": utterance_len,
@@ -494,7 +494,12 @@ def run_scripts_e2b():
                     # "c-layers": 1,
                     "c-layers": 2,
                     # "sharpening-mode": "softmax", # Steps to converge: 52.24
-                    "sharpening-mode": "softmax-temperature-loss-guided", # Steps to converge: 41.82 (max=e); (max=2*e - no go);  47.75 (min=1.01)
+                    "sharpening-mode": "softmax-temperature-loss-guided",
+                        # Steps to converge (out of 10, 1 outlier on each end):
+                        #   41.82 (baseline min=1.1, max=e);
+                        #   (max=2*e - no go);
+                        #   45.75 (min=1.01);
+                        #   41.5 (min=2)
                     "alignment-mode": "dot-product", # NOTE mse is novel (use much higher base lr, for example 0.05); dot-product is textbook
                 },
                 "optimizer": {

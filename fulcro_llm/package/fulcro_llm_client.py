@@ -100,7 +100,7 @@ sync_client_constructor_lambdas = {
 
 # ---------------------------------------------------------------------------
 
-class FeroLlmCachedItem:
+class FulcroLlmCachedItem:
 
     # -----------------------------------------------------------------------
 
@@ -147,7 +147,7 @@ class FeroLlmCachedItem:
 
 # -----------------------------------------------------------------
 
-class FeroCachingLlmClientBase:
+class FulcroCachingLlmClientBase:
 
     is_caching_llm_client = True
 
@@ -164,7 +164,7 @@ class FeroCachingLlmClientBase:
 
 # -----------------------------------------------------------------
 
-class FeroCachingOaiClient(FeroCachingLlmClientBase):
+class FulcroCachingOaiClient(FulcroCachingLlmClientBase):
 
     is_async = False
 
@@ -182,7 +182,7 @@ class FeroCachingOaiClient(FeroCachingLlmClientBase):
 
     def create_completions(self, model, messages, temperature=None, n=None, max_tokens=None, force_key=None):
 
-        cache_item = FeroLlmCachedItem(payload=(model, messages, temperature, n, max_tokens, force_key))
+        cache_item = FulcroLlmCachedItem(payload=(model, messages, temperature, n, max_tokens, force_key))
         cache_item.check_against_local_cache(local_cache_dir=self.local_cache_dir)
         if cache_item.completions is not None:
             return cache_item.completions
@@ -201,7 +201,7 @@ class FeroCachingOaiClient(FeroCachingLlmClientBase):
 
 # -----------------------------------------------------------------
 
-class FeroAsyncCachingOaiClient(FeroCachingLlmClientBase):
+class FulcroAsyncCachingOaiClient(FulcroCachingLlmClientBase):
 
     is_async = True
 
@@ -219,7 +219,7 @@ class FeroAsyncCachingOaiClient(FeroCachingLlmClientBase):
 
     async def create_completions(self, model, messages, temperature=None, n=None, max_tokens=None, force_key=None, timeout=None):
 
-        cache_item = FeroLlmCachedItem(payload=(model, messages, temperature, n, max_tokens, force_key))
+        cache_item = FulcroLlmCachedItem(payload=(model, messages, temperature, n, max_tokens, force_key))
         cache_item.check_against_local_cache(local_cache_dir=self.local_cache_dir)
         if cache_item.completions is not None:
             return cache_item.completions
@@ -239,7 +239,7 @@ class FeroAsyncCachingOaiClient(FeroCachingLlmClientBase):
 
 # -----------------------------------------------------------------
 
-class FeroAsyncCachingAnthropicClient(FeroCachingLlmClientBase):
+class FulcroAsyncCachingAnthropicClient(FulcroCachingLlmClientBase):
 
     is_async = True
 
@@ -259,7 +259,7 @@ class FeroAsyncCachingAnthropicClient(FeroCachingLlmClientBase):
 
         force_key = f"anthropic-{force_key}" if force_key is not None else "anthropic"
 
-        cache_item = FeroLlmCachedItem(payload=(model, messages, temperature, n, max_tokens, force_key))
+        cache_item = FulcroLlmCachedItem(payload=(model, messages, temperature, n, max_tokens, force_key))
         cache_item.check_against_local_cache(local_cache_dir=self.local_cache_dir)
         if cache_item.completions is not None:
             return cache_item.completions
@@ -287,7 +287,7 @@ class FeroAsyncCachingAnthropicClient(FeroCachingLlmClientBase):
 
 # -----------------------------------------------------------------
 
-class FeroAsyncCachingLlmClients:
+class FulcroAsyncCachingLlmClients:
 
     # -------------------------------------------------------------
 
@@ -295,7 +295,7 @@ class FeroAsyncCachingLlmClients:
     def make_client(cls, client_type: str, local_cache_dir: str=None, for_embeddings=False):
         
         if "-anthropic" in client_type:
-            return FeroAsyncCachingAnthropicClient(
+            return FulcroAsyncCachingAnthropicClient(
                 client_type=client_type,
                 local_cache_dir=local_cache_dir
             )
@@ -303,7 +303,7 @@ class FeroAsyncCachingLlmClients:
         if for_embeddings and "azure-" in client_type:
             client_type += "-embeddings"
 
-        return FeroAsyncCachingOaiClient(
+        return FulcroAsyncCachingOaiClient(
             client_type=client_type,
             local_cache_dir=local_cache_dir
         )

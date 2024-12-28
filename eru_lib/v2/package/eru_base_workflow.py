@@ -1,6 +1,6 @@
 import torch
 
-from fero_core import FeroWindowBasedLossLevel
+from fulcro_core import FulcroWindowBasedLossLevel
 
 # ---------------------------------------------------------------------------
 

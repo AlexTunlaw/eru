@@ -32,7 +32,7 @@ class SingleTurnFineTuningExample:
 
 # ---------------------------------------------------------------------------
 
-class FeroOaiFineTuningHelpers:
+class FulcroOaiFineTuningHelpers:
 
     # -----------------------------------------------------------------------
 

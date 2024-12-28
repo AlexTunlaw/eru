@@ -3,11 +3,11 @@ import numpy as np
 
 import torch
 
-from .fero_base_example_stream import FeroBaseExampleStream
+from .fulcro_base_example_stream import FulcroBaseExampleStream
 
 # ---------------------------------------------------------------------------
 
-class FeroSimpleTensorListExampleStream(FeroBaseExampleStream):
+class FulcroSimpleTensorListExampleStream(FulcroBaseExampleStream):
 
     # -----------------------------------------------------------------------
 

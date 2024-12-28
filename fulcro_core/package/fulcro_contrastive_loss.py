@@ -2,7 +2,7 @@ import torch
 
 # ---------------------------------------------------------------------------
 
-class FeroContrastiveLoss(torch.nn.Module):
+class FulcroContrastiveLoss(torch.nn.Module):
 
     # -----------------------------------------------------------------------
 

@@ -2,7 +2,7 @@ import torch
 
 # ---------------------------------------------------------------------------
 
-class FeroSiameseLearner(torch.nn.Module):
+class FulcroSiameseLearner(torch.nn.Module):
     
     # -----------------------------------------------------------------------
 

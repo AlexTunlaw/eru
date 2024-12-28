@@ -3,7 +3,7 @@ import logging
 
 # ---------------------------------------------------------------------------
 
-class FeroFunctionLogger:
+class FulcroFunctionLogger:
 
     # ---------------------------------------------------------------------------
 
@@ -26,5 +26,5 @@ class FeroFunctionLogger:
             if elapsed_seconds < 10
             else f"{round(time.time() - self.start_time)}"
         )
-        log_fn(f"[fero, {elapsed_seconds_formatted} sec] {message}")
+        log_fn(f"[fulcro, {elapsed_seconds_formatted} sec] {message}")
         return
