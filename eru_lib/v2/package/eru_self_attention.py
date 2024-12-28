@@ -74,6 +74,11 @@ class SelfAttention(torch.nn.Module):
                 )
                 attention_weights = custom_base_softmax(attention_scores, base=temperature_effective, dim=-1)
 
+            case "softmax-temperature-loss-guided-2": # novel (this is a more traditional "temperature" pattern)
+                previous_loss = ctx["previous-loss"]
+                previous_loss_effective = previous_loss if previous_loss is not None else 0.99
+                attention_weights = torch.softmax(attention_scores * (1.0 - previous_loss_effective), dim=-1)
+
             case "sigmoid": # not robust for simple eru languages (e.g. bigram-based binary classification)
                 sigmoid_domain = 5
                 attention_scores_max = torch.max(attention_scores, dim=-1).values.unsqueeze(-1)
