@@ -493,24 +493,30 @@ def run_scripts_e2b():
                     "c-heads": 1, #NOTE 1: easy to see convergence patterns; 3: fast, robust convergence
                     # "c-layers": 1,
                     "c-layers": 2,
-                    # lr 0.01, same for all layers. Out of 10, 1 outlier on each end removed
-                    # "sharpening-mode": "softmax", # Steps to converge: 27.25; 27.25
-                    # "sharpening-mode": "softmax-temperature-loss-guided",
-                        # Steps to converge:
-                        #   23.25; 27.88 (baseline min=1.1, max=e);
-                        #   TODO (min=1.01);
-                        #   TODO (min=2)
-                    "sharpening-mode": "softmax-temperature-loss-guided-2",
-                        # Steps to converge: 28.5; TODO
-                    "alignment-mode": "dot-product", # NOTE mse is novel (use much higher base lr, for example 0.05); dot-product is textbook
+                    # Out of 10, 1 outlier on each end removed
+                    "sharpening-mode":
+                        "softmax",
+                            # steps to converge: 27.25; 27.25 | lr 0.01, same for all layers. 
+                            # even eos:1 to eos:2 2/10 at lr 0.01
+                        # "softmax-temperature-loss-guided",
+                            # steps to converge: 23.25; 27.88 (baseline min=1.1, max=e) | lr 0.01, same for all layers. 
+                        # "softmax-temperature-loss-guided-2",
+                            # steps to converge: 28.5; 26.75 | lr 0.01, same for all layers. 
+                        # "warmup-sigmoid",
+                            # steps to converge: much more at the same lr | 1.0..0.7 warmup
+                            # at lr 0.01: eos:1 is much more often even with eos:2!
+                            # at lr 0.05: almost never
+                    "alignment-mode":
+                        "dot-product",
+                        # "mse", #NOTE mse is novel. Use much higher base lr, for example 0.05
                 },
                 "optimizer": {
                     "adam": {
                         "lr": lambda model: [
-                            {"params": model.embedding.parameters(), "lr": 0.01},
-                            {"params": model.layers[0].parameters(), "lr": 0.01},
-                            {"params": model.layers[1].parameters(), "lr": 0.01}, # / 10},
-                            {"params": model.fc.parameters(), "lr": 0.01}, #  / 100},
+                            {"params": model.embedding.parameters(), "lr": 0.001},
+                            {"params": model.layers[0].parameters(), "lr": 0.001},
+                            {"params": model.layers[1].parameters(), "lr": 0.001}, # / 10},
+                            {"params": model.fc.parameters(), "lr": 0.001}, #  / 100},
                         ],
                         "wd": 0.0, # 0.01,
                     }
