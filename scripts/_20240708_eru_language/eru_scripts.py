@@ -493,15 +493,15 @@ def run_scripts_e2b():
                     "c-heads": 1, #NOTE 1: easy to see convergence patterns; 3: fast, robust convergence
                     # "c-layers": 1,
                     "c-layers": 2,
-                    # "sharpening-mode": "softmax", # Steps to converge (out of 10, 1 outlier on each end): 52.24
+                    # lr 0.01, same for all layers. Out of 10, 1 outlier on each end removed
+                    # "sharpening-mode": "softmax", # Steps to converge: 27.25; 27.25
                     # "sharpening-mode": "softmax-temperature-loss-guided",
                         # Steps to converge:
-                        #   41.82 (baseline min=1.1, max=e);
-                        #   (max=2*e - no go);
-                        #   45.75 (min=1.01);
-                        #   41.5 (min=2)
+                        #   23.25; 27.88 (baseline min=1.1, max=e);
+                        #   TODO (min=1.01);
+                        #   TODO (min=2)
                     "sharpening-mode": "softmax-temperature-loss-guided-2",
-                        # Steps to converge: 40.25
+                        # Steps to converge: 28.5; TODO
                     "alignment-mode": "dot-product", # NOTE mse is novel (use much higher base lr, for example 0.05); dot-product is textbook
                 },
                 "optimizer": {
@@ -509,8 +509,8 @@ def run_scripts_e2b():
                         "lr": lambda model: [
                             {"params": model.embedding.parameters(), "lr": 0.01},
                             {"params": model.layers[0].parameters(), "lr": 0.01},
-                            {"params": model.layers[1].parameters(), "lr": 0.01 / 10}, # / 10},
-                            {"params": model.fc.parameters(), "lr": 0.01 / 100}, #  / 100},
+                            {"params": model.layers[1].parameters(), "lr": 0.01}, # / 10},
+                            {"params": model.fc.parameters(), "lr": 0.01}, #  / 100},
                         ],
                         "wd": 0.0, # 0.01,
                     }
