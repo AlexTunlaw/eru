@@ -2,6 +2,8 @@ import torch
 
 from .observer_base import ObserverBase
 
+torch.set_printoptions(precision=5, sci_mode=False)
+
 # ---------------------------------------------------------------------------
 
 class RecorderObserver(ObserverBase):
@@ -11,6 +13,9 @@ class RecorderObserver(ObserverBase):
     def __init__(self):
 
         super().__init__()
+
+        self.last_ctx = None
+        self.last_i_sample = None
         return
 
     # -----------------------------------------------------------------------
@@ -101,6 +106,10 @@ class RecorderObserver(ObserverBase):
                 "attentions": attentions_observations_cur,
             })
 
+        self.last_ctx = ctx
+        self.last_i_sample = i_sample
+        self.last_i1 = i1
+        self.last_i2 = i2
         return
 
     # -----------------------------------------------------------------------
@@ -115,18 +124,17 @@ class RecorderObserver(ObserverBase):
             for t in attentions[:4] + attentions[-3:]:
                 print(t)
 
-            # print(self.observations[i_observation]["projections"][-1][0])
-            level_1_eos_query = self.observations[i_observation]["projections"][-1][1]
-            # print(self.observations[i_observation]["projections"][6][0])
-            level_1_eos_key_1 = self.observations[i_observation]["projections"][8][1]
-            # print(self.observations[i_observation]["projections"][7][0])
-            level_1_eos_key_2 = self.observations[i_observation]["projections"][9][1]
+            get_projection = lambda desc: next((t[1] for t in self.observations[i_observation]["projections"] if t[0] == desc), None)
+
+            level_1_eos_query = get_projection("self-attention 1|queries|0|EOS")
+            level_1_key_1 = get_projection("self-attention 1|keys|0|1")
+            level_1_key_2 = get_projection("self-attention 1|keys|0|2")
 
             sim = torch.nn.CosineSimilarity(dim=0)
             c_prefix = 8
-            print(f"level 1 eos:1 {sim(torch.tensor(level_1_eos_query), torch.tensor(level_1_eos_key_1)):.2f}")
+            print(f"level 1 eos:1 {sim(torch.tensor(level_1_eos_query), torch.tensor(level_1_key_1)):.2f}")
             # print(" ".join(f"{v1:+.1f}|{v2:+.1f}" for v1, v2 in zip(level_1_eos_query[:c_prefix], level_1_eos_key_1[:c_prefix])))
-            print(f"level 1 eos:2 {sim(torch.tensor(level_1_eos_query), torch.tensor(level_1_eos_key_2)):.2f}")
+            print(f"level 1 eos:2 {sim(torch.tensor(level_1_eos_query), torch.tensor(level_1_key_2)):.2f}")
             # print(" ".join(f"{v1:+.1f}|{v2:+.1f}" for v1, v2 in zip(level_1_eos_query[:c_prefix], level_1_eos_key_2[:c_prefix])))
 
             return

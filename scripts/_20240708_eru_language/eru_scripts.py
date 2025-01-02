@@ -513,10 +513,10 @@ def run_scripts_e2b():
                 "optimizer": {
                     "adam": {
                         "lr": lambda model: [
-                            {"params": model.embedding.parameters(), "lr": 0.001},
-                            {"params": model.layers[0].parameters(), "lr": 0.001},
-                            {"params": model.layers[1].parameters(), "lr": 0.001}, # / 10},
-                            {"params": model.fc.parameters(), "lr": 0.001}, #  / 100},
+                            {"params": model.embedding.parameters(), "lr": 0.01},
+                            {"params": model.layers[0].parameters(), "lr": 0.01},
+                            {"params": model.layers[1].parameters(), "lr": 0.01}, # / 10},
+                            {"params": model.fc.parameters(), "lr": 0.01}, #  / 100},
                         ],
                         "wd": 0.0, # 0.01,
                     }

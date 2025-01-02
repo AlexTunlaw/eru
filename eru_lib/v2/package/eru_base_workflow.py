@@ -145,7 +145,10 @@ class EruBaseWorkflow:
 
             continue # training loop
 
-        print(f"Final ({i_batch+1}) loss: {loss_value:05f}")
+        workflow_metrics_info = cls.get_workflow_metric(y_predicted, y_labels)
+        if workflow_metrics_info:
+            workflow_metrics_info = ", " + workflow_metrics_info
+        print(f"Final ({i_batch+1}) loss: {loss_value:05f}{workflow_metrics_info}")
         
         model.eval() # IMPORTANT
         
