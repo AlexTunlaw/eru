@@ -1,6 +1,7 @@
 import torch
 
 from .eru_self_attention import SelfAttention
+from .eru_conceptualized_self_attention import ConceptualizedSelfAttention
 
 # ---------------------------------------------------------------------------
 # multi-head self-attention
@@ -29,28 +30,49 @@ class EruSelfAttentionModel(torch.nn.Module):
         self.c_heads = c_heads
         attention_v_dim = embedding_dim # attention value dimensionality
 
-        self.layers = torch.nn.ModuleList([
-            SelfAttention(
-                input_dim=embedding_dim,
-                attention_dim=attention_dim,
-                output_dim=attention_v_dim,
-                c_heads=c_heads,
-                desc=str(0),
-                sharpening_mode=sharpening_mode,
-                alignment_mode=alignment_mode,
-            )
-        ] + [
-            SelfAttention(
-                input_dim=attention_v_dim,
-                attention_dim=attention_dim,
-                output_dim=attention_v_dim,
-                c_heads=c_heads,
-                desc=str(i_layer),
-                sharpening_mode=sharpening_mode,
-                alignment_mode=alignment_mode,
-            )
-            for i_layer in range(1, c_layers)
-        ])
+        use_conceptualized_self_attention = True #..todo param
+        if use_conceptualized_self_attention:
+            self.layers = torch.nn.ModuleList([
+                ConceptualizedSelfAttention(
+                    input_dim=embedding_dim,
+                    c_conceptualizations=5, #..todo param
+                    output_dim=attention_v_dim,
+                    c_heads=c_heads,
+                    desc=str(0),
+                )
+            ] + [
+                ConceptualizedSelfAttention(
+                    input_dim=attention_v_dim,
+                    c_conceptualizations=5, #..todo param
+                    output_dim=attention_v_dim,
+                    c_heads=c_heads,
+                    desc=str(i_layer),
+                )
+                for i_layer in range(1, c_layers)
+            ])
+        else:
+            self.layers = torch.nn.ModuleList([
+                SelfAttention(
+                    input_dim=embedding_dim,
+                    attention_dim=attention_dim,
+                    output_dim=attention_v_dim,
+                    c_heads=c_heads,
+                    desc=str(0),
+                    sharpening_mode=sharpening_mode,
+                    alignment_mode=alignment_mode,
+                )
+            ] + [
+                SelfAttention(
+                    input_dim=attention_v_dim,
+                    attention_dim=attention_dim,
+                    output_dim=attention_v_dim,
+                    c_heads=c_heads,
+                    desc=str(i_layer),
+                    sharpening_mode=sharpening_mode,
+                    alignment_mode=alignment_mode,
+                )
+                for i_layer in range(1, c_layers)
+            ])
 
         return
 

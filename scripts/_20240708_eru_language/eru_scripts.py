@@ -13,9 +13,10 @@ def run_scripts():
         "e1": run_scripts_e1,
         "e2": run_scripts_e2,
         "e2b": run_scripts_e2b,
+        "e2c": run_scripts_e2c,
     }[
-        "e2b"
-    ]       ()
+        "e2c"
+    ]        ()
 
     return
 
@@ -476,7 +477,7 @@ def run_scripts_e2b():
         #
         # Uniform, 0.01: converges in 14.2 steps, of 15 runs
         #
-        { "enabled": True,
+        { "enabled": False,
             "step-method": EruBuilderE2.train_e2_self_attention_binary_classification,
             "outputs": {},
             "run-count": 10,
@@ -523,5 +524,65 @@ def run_scripts_e2b():
                 }
             },
             "make-observer-fn": lambda: RecorderObserver(),
+        },
+    ])
+
+# ---------------------------------------------------------------------------
+# e3: conceptualized attention
+
+def run_scripts_e2c():
+
+    site = EruSite(data_dir="_data/_20240930_eru_language")
+
+    builder = EruBuilderE2(site, name_key="20240930")
+
+    utterance_len = 20
+    language_params = {
+        "language": {
+            "vocab-size": 100, # 0 is EOU (End Of Utterance)
+            "vocab-ps": [0.0, 0.2, 0.2] + ([0.6 / 97] * 97),
+            "classes": {
+                0: (0.5, "*"),
+                1: (0.5, [1, 2])
+            },
+            "generate-with-no-duplicates": True, # this eliminates duplication of tokens 1, 2
+            "utterance-len": utterance_len,
+        }
+    }
+
+    builder.run_steps([
+        #
+        # conceptualized attention 1/3/2025
+        #
+        { "enabled": True,
+            "step-method": EruBuilderE2.train_e2_self_attention_binary_classification,
+            "outputs": {},
+            "run-count": 10,
+            **language_params,
+            "training-config": {
+                "early-stop": "FulcroWindowBasedLossLevel() <= 0.20", # note
+                "batch-size": 100,
+                "batch-count": 200,
+                "max-seq-len": utterance_len,
+                "log-every-n": 10,
+                "model": {
+                    "embedding-dim": 16,
+                    "attention-dim": 14,
+                    "c-heads": 1, #NOTE
+                    "c-layers": 2,
+                },
+                "optimizer": {
+                    "adam": {
+                        "lr": lambda model: [
+                            {"params": model.embedding.parameters(), "lr": 0.001},
+                            {"params": model.layers[0].parameters(), "lr": 0.001},
+                            {"params": model.layers[1].parameters(), "lr": 0.001}, # / 10},
+                            {"params": model.fc.parameters(), "lr": 0.001}, #  / 100},
+                        ],
+                        "wd": 0.0, # 0.01,
+                    }
+                }
+            },
+            # "make-observer-fn": lambda: RecorderObserver(),
         },
     ])
