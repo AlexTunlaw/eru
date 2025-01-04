@@ -37,12 +37,19 @@ class ConceptualizedSelfAttention(torch.nn.Module):
         # W: num-heads, c-conceptualizations, input-d
         # query, keys, values:
         # -> batch, num-heads, seq, c-conceptualizations
-        keys = self.sigmoid(self.W_key_fc(input))
+        conceptualizations_seq = self.sigmoid(self.W_key_fc(input))
+
+        # -> batch, num-heads, c-conceptualizations
+        conceptualizations = torch.softmax(
+            torch.sum(conceptualizations_seq, dim=2),
+            dim=-1
+        ).squeeze(1)
 
         # -> batch, seq, c-conceptualizations, output-d
-        values = torch.matmul(self.W_value.squeeze(0), input_normalized.permute(0, 1, 3, 2)).permute(0, 3, 1, 2) # note this doesn't deal correctly with num-heads
+        assert self.W_value.shape[0] == 1 # note the below line doesn't deal correctly with num-heads, hence only accepting 1
+        values = torch.matmul(input_normalized, self.W_value).permute(0, 2, 1, 3)
 
         # -> batch, num-heads, seq, output-d
-        output_valued = torch.einsum('abi,abij->abj', keys.squeeze(1), values).unsqueeze(1)
+        output_representation = torch.einsum('ai,abij->abj', conceptualizations, values).unsqueeze(1)
 
-        return output_valued
+        return output_representation

@@ -532,6 +532,8 @@ def run_scripts_e2b():
 
 def run_scripts_e2c():
 
+    from eru_lib.v2 import EruConceptualizedSelfAttentionBinaryClassificationWorkflow
+
     site = EruSite(data_dir="_data/_20240930_eru_language")
 
     builder = EruBuilderE2(site, name_key="20240930")
@@ -559,6 +561,7 @@ def run_scripts_e2c():
             "outputs": {},
             "run-count": 10,
             **language_params,
+            "workflow": EruConceptualizedSelfAttentionBinaryClassificationWorkflow,
             "training-config": {
                 "early-stop": "FulcroWindowBasedLossLevel() <= 0.20", # note
                 "batch-size": 100,
@@ -567,21 +570,34 @@ def run_scripts_e2c():
                 "log-every-n": 10,
                 "model": {
                     "embedding-dim": 16,
-                    "attention-dim": 14,
-                    "c-heads": 1, #NOTE
+                    "c-conceptualizations": 100,
+                    # "c-heads": 1, # (always one for this one)
                     "c-layers": 2,
                 },
                 "optimizer": {
                     "adam": {
                         "lr": lambda model: [
-                            {"params": model.embedding.parameters(), "lr": 0.001},
-                            {"params": model.layers[0].parameters(), "lr": 0.001},
-                            {"params": model.layers[1].parameters(), "lr": 0.001}, # / 10},
-                            {"params": model.fc.parameters(), "lr": 0.001}, #  / 100},
+                            {"params": model.embedding.parameters(), "lr": 0.05},
+                            {"params": model.layers[0].parameters(), "lr": 0.05},
+                            {"params": model.layers[1].parameters(), "lr": 0.05 / 10}, # / 10},
+                            {"params": model.fc.parameters(), "lr": 0.05 / 100}, # / 100},
                         ],
                         "wd": 0.0, # 0.01,
                     }
                 }
+                # Steps to converge:
+                #   c-conceptualizations: 50
+                #     uniform lr=0.01: 49.625
+                #     uniform lr=0.05: 40.375
+                #   c-conceptualizations: 100 (matches vocab size)
+                #     uniform lr=0.01: 58.25
+                #     uniform lr=0.05: 29.875 <-- near-winner
+                #   c-conceptualizations: 100 (matches vocab size)
+                #     base lr=0.05, /2 lr for layer 1, /4 lr for binary fc: 35.86
+                #     base lr=0.05, /10 lr for layer 1, /100 lr for binary fc: 27.825 <-- winner
+                #   c-conceptualizations: 200
+                #     uniform lr=0.01: 54.0
+                #     uniform lr=0.05: 34.0
             },
             # "make-observer-fn": lambda: RecorderObserver(),
         },

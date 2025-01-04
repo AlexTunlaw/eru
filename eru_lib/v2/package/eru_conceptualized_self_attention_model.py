@@ -6,19 +6,15 @@ from .eru_conceptualized_self_attention import ConceptualizedSelfAttention
 # ---------------------------------------------------------------------------
 # multi-head self-attention
 
-class EruSelfAttentionModel(torch.nn.Module): 
+class EruConceptualizedSelfAttentionModel(torch.nn.Module): 
     
     # -----------------------------------------------------------------------
 
     def __init__(self,
         vocab_size,
         embedding_dim,
-        attention_dim,
-        c_heads,
+        c_conceptualizations,
         c_layers=1,
-        dropout=None,
-        sharpening_mode="softmax",
-        alignment_mode="dot-product",
     ):
         super().__init__()
 
@@ -27,28 +23,25 @@ class EruSelfAttentionModel(torch.nn.Module):
             embedding_dim
         )
 
-        self.c_heads = c_heads
+        self.c_heads = 1 # TODO while experimenting 1 is sufficient to understand it
+
         attention_v_dim = embedding_dim # attention value dimensionality
 
         self.layers = torch.nn.ModuleList([
-            SelfAttention(
+            ConceptualizedSelfAttention(
                 input_dim=embedding_dim,
-                attention_dim=attention_dim,
+                c_conceptualizations=c_conceptualizations,
                 output_dim=attention_v_dim,
-                c_heads=c_heads,
+                c_heads=self.c_heads,
                 desc=str(0),
-                sharpening_mode=sharpening_mode,
-                alignment_mode=alignment_mode,
             )
         ] + [
-            SelfAttention(
+            ConceptualizedSelfAttention(
                 input_dim=attention_v_dim,
-                attention_dim=attention_dim,
+                c_conceptualizations=c_conceptualizations,
                 output_dim=attention_v_dim,
-                c_heads=c_heads,
+                c_heads=self.c_heads,
                 desc=str(i_layer),
-                sharpening_mode=sharpening_mode,
-                alignment_mode=alignment_mode,
             )
             for i_layer in range(1, c_layers)
         ])

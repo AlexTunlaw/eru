@@ -85,7 +85,9 @@ class EruBuilderE2(OaiBuilder):
             
             print(f"*** run {i_run}")
 
-            results = EruSelfAttentionBinaryClassificationWorkflow.train(
+            Workflow = params.get("workflow", EruSelfAttentionBinaryClassificationWorkflow)
+
+            results = Workflow.train(
                 example_stream=example_stream,
                 config=params["training-config"],
                 observe_fn=lambda ctx: (observer.observe(ctx) if observer is not None else None)
