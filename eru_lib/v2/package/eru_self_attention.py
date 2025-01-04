@@ -2,11 +2,7 @@ import math
 
 import torch
 
-# ---------------------------------------------------------------------------
-
-def custom_base_softmax(x, base=2, dim=-1):
-    x_exp = torch.pow(base, x)
-    return x_exp / torch.sum(x_exp, dim=dim, keepdim=True)
+from fulcro_core import custom_base_softmax
 
 # ---------------------------------------------------------------------------
 # based on:

@@ -2,11 +2,7 @@ import math
 
 import torch
 
-# ---------------------------------------------------------------------------
-
-def custom_base_softmax(x, base=2, dim=-1):
-    x_exp = torch.pow(base, x)
-    return x_exp / torch.sum(x_exp, dim=dim, keepdim=True)
+from fulcro_core import custom_base_softmax
 
 # ---------------------------------------------------------------------------
 
@@ -40,10 +36,18 @@ class ConceptualizedSelfAttention(torch.nn.Module):
         conceptualizations_seq = self.sigmoid(self.W_key_fc(input))
 
         # -> batch, num-heads, c-conceptualizations
-        conceptualizations = torch.softmax(
-            torch.sum(conceptualizations_seq, dim=2),
-            dim=-1
-        ).squeeze(1)
+        custom_softmax_base = 2 * torch.e
+        if custom_softmax_base is not None:
+            conceptualizations = custom_base_softmax(
+                torch.sum(conceptualizations_seq, dim=2),
+                base=custom_softmax_base,
+                dim=-1
+            ).squeeze(1)
+        else:
+            conceptualizations = torch.softmax(
+                torch.sum(conceptualizations_seq, dim=2),
+                dim=-1
+            ).squeeze(1)
 
         # -> batch, seq, c-conceptualizations, output-d
         assert self.W_value.shape[0] == 1 # note the below line doesn't deal correctly with num-heads, hence only accepting 1
