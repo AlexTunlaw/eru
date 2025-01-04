@@ -579,13 +579,18 @@ def run_scripts_e2c():
                         "lr": lambda model: [
                             {"params": model.embedding.parameters(), "lr": 0.05},
                             {"params": model.layers[0].parameters(), "lr": 0.05},
-                            {"params": model.layers[1].parameters(), "lr": 0.05 / 10}, # / 10},
-                            {"params": model.fc.parameters(), "lr": 0.05 / 100}, # / 100},
+                            {"params": model.layers[1].parameters(), "lr": 0.05}, # / 10},
+                            {"params": model.fc.parameters(), "lr": 0.05}, # / 100},
                         ],
                         "wd": 0.0, # 0.01,
                     }
                 }
-                # Steps to converge:
+                # Steps to converge (out of 10 runs, with 1 outlier on each end, average)
+                # c-layers: 1
+                #   c-conceptualizations: 100 (matches vocab size)
+                #     base lr=0.05, /10 lr for binary fc: 45.88
+                #     uniform lr=0.05: 46.75
+                # c-layers: 2
                 #   c-conceptualizations: 50
                 #     uniform lr=0.01: 49.625
                 #     uniform lr=0.05: 40.375
@@ -598,6 +603,10 @@ def run_scripts_e2c():
                 #   c-conceptualizations: 200
                 #     uniform lr=0.01: 54.0
                 #     uniform lr=0.05: 34.0
+                # c-layers: 3
+                #   c-conceptualizations: 100 (matches vocab size)
+                #     base lr=0.05, /10 lr for layer 1, /10 lr for layer 2, /100 lr for binary fc: 35.75
+                #     uniform lr=0.05: 32.13
             },
             # "make-observer-fn": lambda: RecorderObserver(),
         },
