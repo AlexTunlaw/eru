@@ -14,5 +14,6 @@ class EruConceptualizedSelfAttentionBinaryClassificationWorkflow(EruBaseBinaryCl
             vocab_size=len(example_stream.language.vocab),
             embedding_dim=config["model"]["embedding-dim"],
             c_conceptualizations=config["model"]["c-conceptualizations"],
+            c_heads=config["model"]["c-heads"],
             c_layers=config["model"]["c-layers"],
         )

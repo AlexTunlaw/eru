@@ -16,6 +16,7 @@ class EruConceptualizedSelfAttentionBinaryClassificationModel(EruConceptualizedS
         vocab_size,
         embedding_dim,
         c_conceptualizations,
+        c_heads,
         c_layers,
     ):
 
@@ -23,6 +24,7 @@ class EruConceptualizedSelfAttentionBinaryClassificationModel(EruConceptualizedS
             vocab_size=vocab_size,
             embedding_dim=embedding_dim,
             c_conceptualizations=c_conceptualizations,
+            c_heads=c_heads,
             c_layers=c_layers,
         )
 

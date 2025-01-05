@@ -14,6 +14,7 @@ class EruConceptualizedSelfAttentionModel(torch.nn.Module):
         vocab_size,
         embedding_dim,
         c_conceptualizations,
+        c_heads=1,
         c_layers=1,
     ):
         super().__init__()
@@ -23,7 +24,7 @@ class EruConceptualizedSelfAttentionModel(torch.nn.Module):
             embedding_dim
         )
 
-        self.c_heads = 1 # TODO while experimenting 1 is sufficient to understand it
+        self.c_heads = c_heads
 
         attention_v_dim = embedding_dim # attention value dimensionality
 

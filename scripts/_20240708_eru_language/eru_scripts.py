@@ -570,8 +570,8 @@ def run_scripts_e2c():
                 "log-every-n": 10,
                 "model": {
                     "embedding-dim": 16,
-                    "c-conceptualizations": 100,
-                    # "c-heads": 1, # (always one for this one)
+                    "c-conceptualizations": 105,
+                    "c-heads": 1,
                     "c-layers": 2,
                 },
                 "optimizer": {
@@ -600,6 +600,7 @@ def run_scripts_e2c():
                 #   c-conceptualizations: 100 (matches vocab size)
                 #     base lr=0.05, /2 lr for layer 1, /4 lr for binary fc: 35.86
                 #     base lr=0.05, /10 lr for layer 1, /100 lr for binary fc: 27.825 <-- winner
+                #     base lr=0.05, /10 lr for layer 1, /100 lr for binary fc, with sharper softmax @ 2 * e (`custom_softmax_base`): 26.25 <-- winner
                 #   c-conceptualizations: 200
                 #     uniform lr=0.01: 54.0
                 #     uniform lr=0.05: 34.0

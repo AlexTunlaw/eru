@@ -17,7 +17,6 @@ class ConceptualizedSelfAttention(torch.nn.Module):
         self.layer_norm = torch.nn.LayerNorm((input_dim,))
         self.W_value = torch.nn.Parameter(torch.rand(c_heads, c_conceptualizations, output_dim, input_dim))
         self.W_key_fc = torch.nn.Linear(input_dim, c_conceptualizations)
-        self.scale = math.sqrt(input_dim)
         self.desc = desc
 
         self.sigmoid = torch.nn.Sigmoid()
@@ -36,24 +35,23 @@ class ConceptualizedSelfAttention(torch.nn.Module):
         conceptualizations_seq = self.sigmoid(self.W_key_fc(input))
 
         # -> batch, num-heads, c-conceptualizations
-        custom_softmax_base = 2 * torch.e
-        if custom_softmax_base is not None:
-            conceptualizations = custom_base_softmax(
-                torch.sum(conceptualizations_seq, dim=2),
-                base=custom_softmax_base,
-                dim=-1
-            ).squeeze(1)
-        else:
-            conceptualizations = torch.softmax(
-                torch.sum(conceptualizations_seq, dim=2),
-                dim=-1
-            ).squeeze(1)
+        custom_softmax_base = None # 2 * torch.e (TODO maybe make this a param)
+        softmax = (
+            (lambda t: custom_base_softmax(t, base=custom_softmax_base, dim=-1))
+            if custom_softmax_base is not None
+            else (lambda t: torch.softmax(t, dim=-1))
+        )
+        conceptualizations = softmax(
+            torch.sum(conceptualizations_seq, dim=2)
+        ).squeeze(1)
 
-        # -> batch, seq, c-conceptualizations, output-d
-        assert self.W_value.shape[0] == 1 # note the below line doesn't deal correctly with num-heads, hence only accepting 1
-        values = torch.matmul(input_normalized, self.W_value).permute(0, 2, 1, 3)
+        # -> batch, num-heads, c-conceptualizations, seq, output-d
+        values = torch.matmul(
+            input_normalized.unsqueeze(1),
+            self.W_value.permute(1, 0, 2, 3).unsqueeze(0),
+        ).permute(0, 2, 1, 3, 4)
 
         # -> batch, num-heads, seq, output-d
-        output_representation = torch.einsum('ai,abij->abj', conceptualizations, values).unsqueeze(1)
+        output_representation = torch.einsum('ahc,ahcij->ahij', conceptualizations.unsqueeze(1), values)
 
         return output_representation
